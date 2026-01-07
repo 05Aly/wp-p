@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WP - Local System</title>
+    <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#5eead4',
+                        primaryDark: '#0f766e',
+                        bgLight: '#f3f4f6',
+                        bgDark: '#0f172a',
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body { font-family: 'Tajawal', sans-serif; transition: background-color 0.3s, color 0.3s; }
+        .hidden-app { display: none !important; }
+        .dragging { opacity: 0.5; transform: scale(0.95); }
+        .column-drop-zone { min-height: 200px; transition: background 0.2s; }
+        .drag-over { background-color: rgba(94, 234, 212, 0.1); border: 2px dashed #5eead4; }
+        .active-day { background-color: #0f766e; color: white; }
+    </style>
+</head>
+<body class="bg-bgLight dark:bg-bgDark text-slate-800 dark:text-slate-200 min-h-screen">
+
+    <div class="fixed top-5 left-5 z-50">
+        <button onclick="toggleTheme()" class="p-3 rounded-full bg-white dark:bg-slate-700 shadow-lg hover:scale-110 transition-transform">
+            <span id="themeIcon">🌙</span>
+        </button>
+    </div>
+
+    <div id="authSection" class="min-h-screen flex items-center justify-center px-4">
+        <div class="bg-white dark:bg-slate-800 p-8 rounded-2xl shadow-xl w-full max-w-md border border-slate-100 dark:border-slate-700">
+            <h1 class="text-4xl font-bold text-center text-primaryDark dark:text-primary mb-2">WP</h1>
+            <p class="text-center text-slate-500 dark:text-slate-400 mb-8 font-medium">نظام إدارة المهام المحلي</p>
+            
+            <div id="authError" class="hidden bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400 p-3 rounded-lg text-sm mb-4 text-center border border-red-200 dark:border-red-800"></div>
+
+            <div class="space-y-4">
+                <input type="email" id="emailInput" placeholder="البريد الإلكتروني" class="w-full px-4 py-3 rounded-xl border dark:bg-slate-700 dark:border-slate-600 dark:text-white outline-none focus:ring-2 focus:ring-primary transition">
+                <input type="password" id="passInput" placeholder="كلمة المرور" class="w-full px-4 py-3 rounded-xl border dark:bg-slate-700 dark:border-slate-600 dark:text-white outline-none focus:ring-2 focus:ring-primary transition">
+                
+                <button onclick="handleLogin()" class="w-full bg-primaryDark hover:bg-teal-800 text-white py-3 rounded-xl font-bold transition shadow-md">تسجيل الدخول</button>
+                <button onclick="handleRegister()" class="w-full border-2 border-primaryDark text-primaryDark dark:text-primary dark:border-primary py-3 rounded-xl font-bold hover:bg-teal-50 dark:hover:bg-slate-700 transition">إنشاء حساب جديد</button>
+            </div>
+            <p class="text-xs text-center text-slate-400 mt-6">بياناتك تُحفظ محلياً في هذا المتصفح فقط</p>
+        </div>
+    </div>
+
+    <div id="mainApp" class="hidden-app container mx-auto px-4 py-8 max-w-5xl">
+        <header class="flex justify-between items-center mb-8">
+            <div>
+                <h1 class="text-4xl font-bold text-primaryDark dark:text-primary tracking-tight">WP</h1>
+                <p id="userDisplay" class="text-sm text-slate-500 dark:text-slate-400 font-bold"></p>
+            </div>
+            <div class="flex items-center gap-3">
+                <button onclick="logout()" class="px-4 py-2 rounded-xl bg-red-100 text-red-600 dark:bg-red-900/20 dark:text-red-400 hover:bg-red-200 transition font-bold text-sm">
+                    🚪 خروج
+                </button>
+            </div>
+        </header>
+
+        <div class="mb-8 overflow-x-auto pb-2 flex md:justify-center gap-2" id="daysContainer"></div>
+
+        <div class="max-w-xl mx-auto flex gap-2 mb-10">
+            <input type="text" id="taskInput" placeholder="ما هي مهمتك القادمة؟" 
+                class="flex-1 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl px-5 py-3 shadow-sm outline-none text-slate-800 dark:text-white focus:ring-2 focus:ring-primary">
+            <button onclick="addTask()" class="bg-primaryDark hover:bg-teal-800 text-white rounded-xl px-6 py-2 font-bold shadow-lg">إضافة</button>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div class="bg-white dark:bg-slate-800 rounded-2xl p-4 shadow-md border-t-4 border-red-400">
+                <h3 class="font-bold mb-4 flex justify-between">🛑 هيتم القيام بها <span id="count-todo" class="bg-red-50 dark:bg-red-900/20 px-2 py-0.5 rounded text-xs">0</span></h3>
+                <div id="col-todo" class="column-drop-zone space-y-3" ondragover="allowDrop(event)" ondragleave="leaveDrop(event)" ondrop="handleDrop(event, 'todo')"></div>
+            </div>
+            <div class="bg-white dark:bg-slate-800 rounded-2xl p-4 shadow-md border-t-4 border-yellow-400">
+                <h3 class="font-bold mb-4 flex justify-between">🚧 يتم العمل عليها <span id="count-doing" class="bg-yellow-50 dark:bg-yellow-900/20 px-2 py-0.5 rounded text-xs">0</span></h3>
+                <div id="col-doing" class="column-drop-zone space-y-3" ondragover="allowDrop(event)" ondragleave="leaveDrop(event)" ondrop="handleDrop(event, 'doing')"></div>
+            </div>
+            <div class="bg-white dark:bg-slate-800 rounded-2xl p-4 shadow-md border-t-4 border-green-400">
+                <h3 class="font-bold mb-4 flex justify-between">✅ تم الانتهاء <span id="count-done" class="bg-green-50 dark:bg-green-900/20 px-2 py-0.5 rounded text-xs">0</span></h3>
+                <div id="col-done" class="column-drop-zone space-y-3" ondragover="allowDrop(event)" ondragleave="leaveDrop(event)" ondrop="handleDrop(event, 'done')"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // --- الأساسيات ---
+        const days = ['السبت', 'الأحد', 'الاثنين', 'الثلاثاء', 'الأربعاء', 'الخميس', 'الجمعة'];
+        let selectedDay = days[new Date().getDay() === 6 ? 0 : new Date().getDay() + 1];
+        let currentUser = JSON.parse(localStorage.getItem('wp_logged_in')) || null;
+
+        // --- نظام الوضع الليلي (Dark Mode) ---
+        function toggleTheme() {
+            const isDark = document.documentElement.classList.toggle('dark');
+            localStorage.theme = isDark ? 'dark' : 'light';
+            updateThemeUI(isDark);
+        }
+
+        function updateThemeUI(isDark) {
+            document.getElementById('themeIcon').innerText = isDark ? '☀️' : '🌙';
+        }
+
+        function initTheme() {
+            const isDark = localStorage.theme === 'dark' || (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches);
+            if (isDark) document.documentElement.classList.add('dark');
+            updateThemeUI(isDark);
+        }
+
+        // --- نظام الحسابات (JSON) ---
+        function handleRegister() {
+            const email = document.getElementById('emailInput').value;
+            const pass = document.getElementById('passInput').value;
+            if(!email || !pass) return showError("يرجى ملء كافة الحقول");
+
+            let users = JSON.parse(localStorage.getItem('wp_users')) || [];
+            if(users.find(u => u.email === email)) return showError("هذا الإيميل مسجل مسبقاً!");
+
+            users.push({ email, pass, tasks: {} });
+            localStorage.setItem('wp_users', JSON.stringify(users));
+            alert("تم إنشاء الحساب! سجل دخولك الآن.");
+        }
+
+        function handleLogin() {
+            const email = document.getElementById('emailInput').value;
+            const pass = document.getElementById('passInput').value;
+            let users = JSON.parse(localStorage.getItem('wp_users')) || [];
+            let user = users.find(u => u.email === email && u.pass === pass);
+            
+            if(user) {
+                currentUser = user;
+                localStorage.setItem('wp_logged_in', JSON.stringify(user));
+                checkAuth();
+            } else {
+                showError("لم يتم العثور على الحساب، يرجى التأكد من البيانات.");
+            }
+        }
+
+        function logout() {
+            localStorage.removeItem('wp_logged_in');
+            location.reload();
+        }
+
+        function checkAuth() {
+            if(currentUser) {
+                document.getElementById('authSection').classList.add('hidden-app');
+                document.getElementById('mainApp').classList.remove('hidden-app');
+                document.getElementById('userDisplay').innerText = `أهلاً: ${currentUser.email}`;
+                renderDays();
+                renderBoard();
+            }
+        }
+
+        function showError(msg) {
+            const errDiv = document.getElementById('authError');
+            errDiv.innerText = msg;
+            errDiv.classList.remove('hidden');
+        }
+
+        // --- نظام المهام ---
+        function renderDays() {
+            const container = document.getElementById('daysContainer');
+            container.innerHTML = '';
+            days.forEach(day => {
+                const btn = document.createElement('button');
+                btn.innerText = day;
+                btn.className = `px-5 py-2 rounded-xl text-sm font-bold transition-all ${day === selectedDay ? 'active-day shadow-md scale-105' : 'bg-white dark:bg-slate-700 hover:bg-slate-100 dark:hover:bg-slate-600'}`;
+                btn.onclick = () => { selectedDay = day; renderDays(); renderBoard(); };
+                container.appendChild(btn);
+            });
+        }
+
+        function addTask() {
+            const input = document.getElementById('taskInput');
+            if(!input.value.trim()) return;
+            if(!currentUser.tasks[selectedDay]) currentUser.tasks[selectedDay] = [];
+            currentUser.tasks[selectedDay].push({ id: 't-'+Date.now(), text: input.value, status: 'todo' });
+            input.value = '';
+            saveData();
+        }
+
+        function renderBoard() {
+            const cols = { todo: document.getElementById('col-todo'), doing: document.getElementById('col-doing'), done: document.getElementById('col-done') };
+            Object.values(cols).forEach(c => c.innerHTML = '');
+            let countMap = { todo: 0, doing: 0, done: 0 };
+            const dayTasks = currentUser.tasks[selectedDay] || [];
+
+            dayTasks.forEach(task => {
+                countMap[task.status]++;
+                const div = document.createElement('div');
+                div.id = task.id; div.draggable = true;
+                div.className = 'bg-white dark:bg-slate-700 p-4 rounded-lg shadow-sm border border-slate-100 dark:border-slate-600 cursor-move flex justify-between group animate-in fade-in duration-300';
+                div.ondragstart = (e) => e.dataTransfer.setData("text", e.target.id);
+                div.innerHTML = `<span class="dark:text-slate-200">${task.text}</span><button onclick="deleteTask('${task.id}')" class="text-red-400 opacity-0 group-hover:opacity-100 transition px-2">✕</button>`;
+                cols[task.status].appendChild(div);
+            });
+            ['todo', 'doing', 'done'].forEach(k => document.getElementById('count-'+k).innerText = countMap[k]);
+        }
+
+        function deleteTask(id) {
+            currentUser.tasks[selectedDay] = currentUser.tasks[selectedDay].filter(t => t.id !== id);
+            saveData();
+        }
+
+        window.allowDrop = (e) => { e.preventDefault(); e.currentTarget.classList.add('drag-over'); }
+        window.leaveDrop = (e) => e.currentTarget.classList.remove('drag-over');
+        window.handleDrop = (e, status) => {
+            e.preventDefault(); e.currentTarget.classList.remove('drag-over');
+            const id = e.dataTransfer.getData("text");
+            const task = currentUser.tasks[selectedDay].find(t => t.id === id);
+            if(task) { task.status = status; saveData(); }
+        }
+
+        function saveData() {
+            localStorage.setItem('wp_logged_in', JSON.stringify(currentUser));
+            let users = JSON.parse(localStorage.getItem('wp_users'));
+            let idx = users.findIndex(u => u.email === currentUser.email);
+            users[idx] = currentUser;
+            localStorage.setItem('wp_users', JSON.stringify(users));
+            renderBoard();
+        }
+
+        // بدء التشغيل
+        initTheme();
+        checkAuth();
+    </script>
+</body>
+</html>
