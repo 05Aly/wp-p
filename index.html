@@ -11,169 +11,279 @@
             darkMode: 'class',
             theme: {
                 extend: {
-                    colors: {
-                        primary: '#5eead4',
-                        primaryDark: '#0f766e',
-                        bgLight: '#f3f4f6',
-                        bgDark: '#0f172a',
-                    }
+                    colors: { primary: '#5eead4', primaryDark: '#0f766e', bgLight: '#f3f4f6', bgDark: '#0f172a' }
                 }
             }
         }
     </script>
     <style>
-        body { font-family: 'Tajawal', sans-serif; transition: background-color 0.3s, color 0.3s; }
+        body { font-family: 'Tajawal', sans-serif; transition: all 0.3s; }
         .hidden-section { display: none !important; }
-        .dragging { opacity: 0.5; transform: scale(0.95); }
-        .column-drop-zone { min-height: 200px; transition: background 0.2s; }
-        .drag-over { background-color: rgba(94, 234, 212, 0.1); border: 2px dashed #5eead4; }
         .active-tab { background-color: #0f766e !important; color: white !important; }
-        .nav-link { cursor: pointer; transition: all 0.3s; }
+        #notesSidebar { transition: transform 0.3s ease-in-out; }
+        .sidebar-open { transform: translateX(0) !important; }
+        #noteModalOverlay { background: rgba(0,0,0,0.7); backdrop-filter: blur(4px); }
+        .column-drop-zone { min-height: 200px; border-radius: 1rem; transition: background 0.2s; }
+        .drag-over { background-color: rgba(94, 234, 212, 0.1); border: 2px dashed #5eead4; }
+        
+        /* ألوان المهام الجديدة */
+        .priority-low { border-right: 5px solid #10b981; } /* أخضر */
+        .priority-medium { border-right: 5px solid #f59e0b; } /* أصفر */
+        .priority-high { border-right: 5px solid #ef4444; } /* أحمر */
+        
+        .dot-low { background-color: #10b981; }
+        .dot-medium { background-color: #f59e0b; }
+        .dot-high { background-color: #ef4444; }
     </style>
 </head>
 <body class="bg-bgLight dark:bg-bgDark text-slate-800 dark:text-slate-200 min-h-screen">
 
-    <div class="fixed top-5 left-5 z-50">
-        <button onclick="toggleTheme()" class="p-3 rounded-full bg-white dark:bg-slate-700 shadow-lg hover:scale-110 transition-transform">
-            <span id="themeIcon">🌙</span>
-        </button>
-    </div>
-
-    <div id="authSection" class="min-h-screen flex items-center justify-center px-4">
-        <div class="bg-white dark:bg-slate-800 p-8 rounded-2xl shadow-xl w-full max-w-md border border-slate-100 dark:border-slate-700">
-            <h1 class="text-4xl font-bold text-center text-primaryDark dark:text-primary mb-2">WP 2026</h1>
-            <p class="text-center text-slate-500 dark:text-slate-400 mb-8 font-medium">خطط لعامك الجديد بكل سهولة</p>
-            <div id="authError" class="hidden bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400 p-3 rounded-lg text-sm mb-4 text-center"></div>
-            <div class="space-y-4">
-                <input type="email" id="emailInput" placeholder="البريد الإلكتروني" class="w-full px-4 py-3 rounded-xl border dark:bg-slate-700 dark:border-slate-600 outline-none focus:ring-2 focus:ring-primary">
-                <input type="password" id="passInput" placeholder="كلمة المرور" class="w-full px-4 py-3 rounded-xl border dark:bg-slate-700 dark:border-slate-600 outline-none focus:ring-2 focus:ring-primary">
-                <button onclick="handleLogin()" class="w-full bg-primaryDark hover:bg-teal-800 text-white py-3 rounded-xl font-bold transition">تسجيل الدخول</button>
-                <button onclick="handleRegister()" class="w-full border-2 border-primaryDark text-primaryDark dark:text-primary py-3 rounded-xl font-bold hover:bg-teal-50 dark:hover:bg-slate-700 transition">إنشاء حساب</button>
+    <div id="noteModalOverlay" class="fixed inset-0 z-[200] hidden flex items-center justify-center p-4" onclick="closeNoteModal()">
+        <div class="bg-white dark:bg-slate-800 w-full max-w-lg rounded-2xl shadow-2xl overflow-hidden" onclick="event.stopPropagation()">
+            <div class="p-4 bg-primaryDark text-white flex justify-between">
+                <span class="font-bold">تعديل الملاحظة</span>
+                <button onclick="closeNoteModal()" class="text-2xl">&times;</button>
+            </div>
+            <div class="p-6 space-y-4 text-right">
+                <input type="text" id="editNoteTitle" class="w-full p-2 border rounded dark:bg-slate-700 dark:border-slate-600 outline-none">
+                <textarea id="editNoteContent" rows="6" class="w-full p-2 border rounded dark:bg-slate-700 dark:border-slate-600 outline-none resize-none"></textarea>
+                <div class="flex justify-end gap-2">
+                    <button onclick="saveNoteEdit()" class="bg-primaryDark text-white px-6 py-2 rounded-lg font-bold">حفظ</button>
+                </div>
             </div>
         </div>
     </div>
 
-    <div id="mainApp" class="hidden-section">
-        <nav class="bg-white dark:bg-slate-800 shadow-md sticky top-0 z-40 mb-6">
+    <div class="fixed top-5 left-5 z-50 flex flex-col gap-3">
+        <button onclick="toggleTheme()" class="p-3 rounded-full bg-white dark:bg-slate-700 shadow-lg hover:scale-110 transition">
+            <span id="themeIcon">🌙</span>
+        </button>
+    </div>
+
+    <div id="notesSidebar" class="fixed top-0 right-0 h-full w-80 bg-white dark:bg-slate-800 shadow-2xl z-[100] transform translate-x-full border-l dark:border-slate-700 flex flex-col">
+        <div class="p-5 border-b dark:border-slate-700 flex justify-between bg-primaryDark text-white">
+            <h3 class="font-bold">الملاحظات الشخصية</h3>
+            <button onclick="toggleNotes()" class="text-2xl">&times;</button>
+        </div>
+        <div class="p-4 space-y-3 bg-slate-50 dark:bg-slate-900/50">
+            <input type="text" id="noteTitleInput" placeholder="عنوان الملاحظة" class="w-full p-2 rounded border dark:bg-slate-700 dark:border-slate-600">
+            <textarea id="noteContentInput" placeholder="المحتوى..." class="w-full p-2 rounded border dark:bg-slate-700 dark:border-slate-600 h-20"></textarea>
+            <button onclick="addNote()" class="w-full bg-primaryDark text-white py-2 rounded font-bold">إضافة</button>
+        </div>
+        <div id="notesList" class="flex-1 overflow-y-auto p-4 space-y-2 text-right"></div>
+    </div>
+
+    <div id="authSection" class="min-h-screen flex items-center justify-center px-4">
+        <div class="bg-white dark:bg-slate-800 p-8 rounded-2xl shadow-xl w-full max-w-md">
+            <h1 class="text-4xl font-bold text-center text-primaryDark dark:text-primary mb-6">WP 2026</h1>
+            <div class="space-y-4">
+                <input type="email" id="emailInput" placeholder="البريد الإلكتروني" class="w-full px-4 py-3 rounded-xl border dark:bg-slate-700 dark:border-slate-600 outline-none">
+                <input type="password" id="passInput" placeholder="كلمة المرور" class="w-full px-4 py-3 rounded-xl border dark:bg-slate-700 dark:border-slate-600 outline-none">
+                <button onclick="handleLogin()" class="w-full bg-primaryDark text-white py-3 rounded-xl font-bold">دخول</button>
+                <button onclick="handleRegister()" class="w-full border-2 border-primaryDark text-primaryDark py-3 rounded-xl font-bold">إنشاء حساب</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="mainApp" class="hidden-section text-right">
+        <nav class="bg-white dark:bg-slate-800 shadow-md sticky top-0 z-40 mb-6 border-b dark:border-slate-700">
             <div class="container mx-auto px-4 flex justify-between items-center h-16">
                 <span class="text-2xl font-bold text-primaryDark dark:text-primary">WP 2026</span>
-                <div class="flex gap-2 md:gap-4">
-                    <button onclick="switchTab('goals')" id="tab-goals" class="nav-link px-3 py-2 rounded-lg text-sm font-bold bg-slate-100 dark:bg-slate-700">الأهداف الرئيسية</button>
-                    <button onclick="switchTab('monthly')" id="tab-monthly" class="nav-link px-3 py-2 rounded-lg text-sm font-bold bg-slate-100 dark:bg-slate-700">المخطط الشهري</button>
-                    <button onclick="switchTab('weekly')" id="tab-weekly" class="nav-link px-3 py-2 rounded-lg text-sm font-bold bg-slate-100 dark:bg-slate-700">المخطط الأسبوعي</button>
-                    <button onclick="logout()" class="px-3 py-2 rounded-lg text-sm font-bold bg-red-100 text-red-600 dark:bg-red-900/30">خروج</button>
+                <div class="flex gap-2">
+                    <button onclick="switchTab('goals')" id="tab-goals" class="px-3 py-2 rounded-lg text-sm font-bold bg-slate-100 dark:bg-slate-700">السنة</button>
+                    <button onclick="switchTab('monthly')" id="tab-monthly" class="px-3 py-2 rounded-lg text-sm font-bold bg-slate-100 dark:bg-slate-700">الشهور</button>
+                    <button onclick="switchTab('weekly')" id="tab-weekly" class="px-3 py-2 rounded-lg text-sm font-bold bg-slate-100 dark:bg-slate-700">الأسابيع</button>
+                    <button onclick="toggleNotes()" class="px-3 py-2 rounded-lg text-sm font-bold bg-yellow-100 text-yellow-700">📝</button>
+                    <button onclick="logout()" class="px-3 py-2 rounded-lg text-sm font-bold bg-red-100 text-red-600">خروج</button>
                 </div>
             </div>
         </nav>
 
         <div class="container mx-auto px-4 pb-10 max-w-5xl">
             <div class="mb-6 text-center">
-                <p id="userDisplay" class="text-slate-500 font-bold"></p>
-                <h2 id="sectionTitle" class="text-2xl font-bold mt-2">الأهداف الرئيسية</h2>
+                <h2 id="sectionTitle" class="text-3xl font-bold text-primaryDark dark:text-primary mb-2"></h2>
+                <div class="max-w-md mx-auto bg-slate-200 dark:bg-slate-700 rounded-full h-4 mb-2 overflow-hidden shadow-inner">
+                    <div id="progressFill" class="bg-primaryDark h-full transition-all duration-500" style="width: 0%"></div>
+                </div>
+                <p class="text-sm font-bold text-slate-500">تم إنجاز <span id="progressText">0%</span></p>
+            </div>
+            
+            <div class="max-w-xl mx-auto flex flex-col md:flex-row gap-2 mb-10">
+                <input type="text" id="taskInput" placeholder="اكتب المهمة هنا..." class="flex-1 bg-white dark:bg-slate-800 border rounded-xl px-4 py-3 outline-none focus:ring-2 focus:ring-primary shadow-sm">
+                <select id="taskPriority" class="bg-white dark:bg-slate-800 border rounded-xl px-2 py-3 text-sm outline-none">
+                    <option value="low">عادي (أخضر)</option>
+                    <option value="medium">متوسط (أصفر)</option>
+                    <option value="high">عاجل (أحمر)</option>
+                </select>
+                <button onclick="addTask()" class="bg-primaryDark text-white rounded-xl px-8 py-3 font-bold shadow-lg hover:bg-teal-700 transition">إضافة</button>
             </div>
 
-            <div class="max-w-xl mx-auto flex gap-2 mb-10">
-                <input type="text" id="taskInput" placeholder="اكتب المهمة هنا..." 
-                    class="flex-1 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl px-5 py-3 shadow-sm outline-none focus:ring-2 focus:ring-primary">
-                <button onclick="addTask()" class="bg-primaryDark hover:bg-teal-800 text-white rounded-xl px-6 py-2 font-bold shadow-lg">إضافة</button>
-            </div>
-
-            <div id="selectionBar" class="mb-8 overflow-x-auto pb-2 flex md:justify-center gap-2"></div>
+            <div id="selectionBar" class="mb-8 overflow-x-auto flex justify-center gap-2 p-2"></div>
 
             <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-                <div class="bg-white dark:bg-slate-800 rounded-2xl p-4 shadow-md border-t-4 border-red-400">
-                    <h3 class="font-bold mb-4 flex justify-between">🛑 للقيام بها <span id="count-todo" class="bg-red-50 dark:bg-red-900/20 px-2 py-0.5 rounded text-xs">0</span></h3>
-                    <div id="col-todo" class="column-drop-zone space-y-3" ondragover="allowDrop(event)" ondragleave="leaveDrop(event)" ondrop="handleDrop(event, 'todo')"></div>
+                <div class="bg-white dark:bg-slate-800 rounded-2xl p-5 shadow-lg border-t-4 border-red-400">
+                    <h3 class="font-bold mb-4 flex justify-between items-center text-lg">🛑 للقيام <span id="count-todo" class="text-xs bg-red-100 text-red-600 px-2 py-1 rounded-full">0</span></h3>
+                    <div id="col-todo" class="column-drop-zone space-y-3" ondragover="allowDrop(event)" ondragleave="clearStyle(event)" ondrop="handleDrop(event, 'todo')"></div>
                 </div>
-                <div class="bg-white dark:bg-slate-800 rounded-2xl p-4 shadow-md border-t-4 border-yellow-400">
-                    <h3 class="font-bold mb-4 flex justify-between">🚧 جاري العمل <span id="count-doing" class="bg-yellow-50 dark:bg-yellow-900/20 px-2 py-0.5 rounded text-xs">0</span></h3>
-                    <div id="col-doing" class="column-drop-zone space-y-3" ondragover="allowDrop(event)" ondragleave="leaveDrop(event)" ondrop="handleDrop(event, 'doing')"></div>
+                <div class="bg-white dark:bg-slate-800 rounded-2xl p-5 shadow-lg border-t-4 border-yellow-400">
+                    <h3 class="font-bold mb-4 flex justify-between items-center text-lg">🚧 جاري العمل <span id="count-doing" class="text-xs bg-yellow-100 text-yellow-600 px-2 py-1 rounded-full">0</span></h3>
+                    <div id="col-doing" class="column-drop-zone space-y-3" ondragover="allowDrop(event)" ondragleave="clearStyle(event)" ondrop="handleDrop(event, 'doing')"></div>
                 </div>
-                <div class="bg-white dark:bg-slate-800 rounded-2xl p-4 shadow-md border-t-4 border-green-400">
-                    <h3 class="font-bold mb-4 flex justify-between">✅ تم الإنجاز <span id="count-done" class="bg-green-50 dark:bg-green-900/20 px-2 py-0.5 rounded text-xs">0</span></h3>
-                    <div id="col-done" class="column-drop-zone space-y-3" ondragover="allowDrop(event)" ondragleave="leaveDrop(event)" ondrop="handleDrop(event, 'done')"></div>
+                <div class="bg-white dark:bg-slate-800 rounded-2xl p-5 shadow-lg border-t-4 border-green-400">
+                    <h3 class="font-bold mb-4 flex justify-between items-center text-lg">✅ منجز <span id="count-done" class="text-xs bg-green-100 text-green-600 px-2 py-1 rounded-full">0</span></h3>
+                    <div id="col-done" class="column-drop-zone space-y-3" ondragover="allowDrop(event)" ondragleave="clearStyle(event)" ondrop="handleDrop(event, 'done')"></div>
                 </div>
             </div>
         </div>
     </div>
 
     <script>
-        const days = ['السبت', 'الأحد', 'الاثنين', 'الثلاثاء', 'الأربعاء', 'الخميس', 'الجمعة'];
-        const months = ['يناير', 'فبراير', 'مارس', 'أبريل', 'مايو', 'يونيو', 'يوليو', 'أغسطس', 'سبتمبر', 'أكتوبر', 'نوفمبر', 'ديسمبر'];
-        
-        let currentTab = 'goals'; // goals, monthly, weekly
-        let selectedSubKey = '2026'; // Year, Month Name, or Day Name
         let currentUser = JSON.parse(localStorage.getItem('wp_logged_in')) || null;
+        let currentTab = 'goals';
+        let selectedSubKey = '2026';
+        let activeEditNoteId = null;
 
-        // تبديل الأقسام (Tabs)
-        function switchTab(tab) {
-            currentTab = tab;
-            if(tab === 'goals') {
-                selectedSubKey = 'main_2026';
-                document.getElementById('selectionBar').classList.add('hidden-section');
-                document.getElementById('sectionTitle').innerText = 'أهداف عام 2026 الرئيسية';
-            } else if(tab === 'monthly') {
-                selectedSubKey = months[new Date().getMonth()];
-                document.getElementById('selectionBar').classList.remove('hidden-section');
-                document.getElementById('sectionTitle').innerText = 'المخطط الشهري';
-                renderSelectionBar(months);
-            } else {
-                selectedSubKey = days[new Date().getDay() === 6 ? 0 : new Date().getDay() + 1];
-                document.getElementById('selectionBar').classList.remove('hidden-section');
-                document.getElementById('sectionTitle').innerText = 'المخطط الأسبوعي';
-                renderSelectionBar(days);
-            }
-            updateTabUI();
-            renderBoard();
+        const sectionTitles = { goals: "أهداف السنة الرئيسية", monthly: "أهداف الشهر", weekly: "الأهداف الأسبوعية" };
+
+        function toggleTheme() {
+            const isDark = document.documentElement.classList.toggle('dark');
+            localStorage.theme = isDark ? 'dark' : 'light';
+            document.getElementById('themeIcon').innerText = isDark ? '☀️' : '🌙';
         }
 
-        function renderSelectionBar(items) {
-            const container = document.getElementById('selectionBar');
+        function toggleNotes() { document.getElementById('notesSidebar').classList.toggle('sidebar-open'); }
+
+        function addNote() {
+            const title = document.getElementById('noteTitleInput').value.trim();
+            const content = document.getElementById('noteContentInput').value.trim();
+            if(!title || !content) return;
+            if(!currentUser.notes) currentUser.notes = [];
+            currentUser.notes.unshift({ id: 'n'+Date.now(), title, content });
+            document.getElementById('noteTitleInput').value = '';
+            document.getElementById('noteContentInput').value = '';
+            saveData(); renderNotes();
+        }
+
+        function renderNotes() {
+            const container = document.getElementById('notesList');
             container.innerHTML = '';
-            items.forEach(item => {
-                const btn = document.createElement('button');
-                btn.innerText = item;
-                btn.className = `px-4 py-2 rounded-xl text-xs font-bold transition-all ${item === selectedSubKey ? 'bg-primaryDark text-white' : 'bg-white dark:bg-slate-700'}`;
-                btn.onclick = () => { selectedSubKey = item; renderSelectionBar(items); renderBoard(); };
-                container.appendChild(btn);
+            (currentUser?.notes || []).forEach(n => {
+                const div = document.createElement('div');
+                div.className = 'bg-slate-100 dark:bg-slate-700 p-3 rounded-lg border-r-4 border-primaryDark cursor-pointer group shadow-sm';
+                div.onclick = () => {
+                    activeEditNoteId = n.id;
+                    document.getElementById('editNoteTitle').value = n.title;
+                    document.getElementById('editNoteContent').value = n.content;
+                    document.getElementById('noteModalOverlay').classList.remove('hidden');
+                };
+                div.innerHTML = `<div class="flex justify-between font-bold text-sm"><span>${n.title}</span><button onclick="event.stopPropagation(); deleteNote('${n.id}')" class="text-red-400 opacity-0 group-hover:opacity-100">✕</button></div>`;
+                container.appendChild(div);
             });
         }
 
-        function updateTabUI() {
-            document.querySelectorAll('.nav-link').forEach(el => el.classList.remove('active-tab'));
-            document.getElementById('tab-' + currentTab).classList.add('active-tab');
+        function closeNoteModal() { document.getElementById('noteModalOverlay').classList.add('hidden'); }
+        function saveNoteEdit() {
+            const note = currentUser.notes.find(n => n.id === activeEditNoteId);
+            if(note) {
+                note.title = document.getElementById('editNoteTitle').value;
+                note.content = document.getElementById('editNoteContent').value;
+                saveData(); renderNotes(); closeNoteModal();
+            }
+        }
+        function deleteNote(id) {
+            currentUser.notes = currentUser.notes.filter(n => n.id !== id);
+            saveData(); renderNotes();
         }
 
-        // نفس منطق الوظائف السابق مع تعديل تخزين البيانات
+        function switchTab(tab) {
+            currentTab = tab;
+            selectedSubKey = tab === 'goals' ? '2026' : (tab === 'monthly' ? 'يناير' : 'السبت');
+            document.getElementById('sectionTitle').innerText = sectionTitles[tab];
+            renderSelectionBar();
+            renderBoard();
+            updateTabUI();
+        }
+
+        function updateTabUI() {
+            document.querySelectorAll('nav button').forEach(b => b.classList.remove('active-tab'));
+            document.getElementById('tab-' + currentTab)?.classList.add('active-tab');
+        }
+
+        function renderSelectionBar() {
+            const bar = document.getElementById('selectionBar');
+            bar.innerHTML = '';
+            if(currentTab !== 'goals') {
+                const list = currentTab === 'monthly' ? ['يناير','فبراير','مارس','أبريل','مايو','يونيو','يوليو','أغسطس','سبتمبر','أكتوبر','نوفمبر','ديسمبر'] : ['السبت','الأحد','الاثنين','الثلاثاء','الأربعاء','الخميس','الجمعة'];
+                list.forEach(item => {
+                    const btn = document.createElement('button');
+                    btn.innerText = item;
+                    btn.className = `px-4 py-1.5 rounded-full text-xs font-bold transition ${selectedSubKey === item ? 'bg-primaryDark text-white shadow-md' : 'bg-slate-200 dark:bg-slate-700'}`;
+                    btn.onclick = () => { selectedSubKey = item; renderSelectionBar(); renderBoard(); };
+                    bar.appendChild(btn);
+                });
+            }
+        }
+
         function addTask() {
-            const input = document.getElementById('taskInput');
-            if(!input.value.trim()) return;
-            // هيكل البيانات: currentUser.tasks[currentTab][selectedSubKey]
+            const val = document.getElementById('taskInput').value.trim();
+            const priority = document.getElementById('taskPriority').value;
+            if(!val) return;
+            if(!currentUser.tasks) currentUser.tasks = {};
             if(!currentUser.tasks[currentTab]) currentUser.tasks[currentTab] = {};
             if(!currentUser.tasks[currentTab][selectedSubKey]) currentUser.tasks[currentTab][selectedSubKey] = [];
             
-            currentUser.tasks[currentTab][selectedSubKey].push({ id: 't-'+Date.now(), text: input.value, status: 'todo' });
-            input.value = '';
+            currentUser.tasks[currentTab][selectedSubKey].push({ id: 't'+Date.now(), text: val, status: 'todo', priority: priority });
+            document.getElementById('taskInput').value = '';
             saveData();
+        }
+
+        function calculateProgress(tasks) {
+            if (tasks.length === 0) return 0;
+            const doneCount = tasks.filter(t => t.status === 'done').length;
+            return Math.round((doneCount / tasks.length) * 100);
         }
 
         function renderBoard() {
             const cols = { todo: document.getElementById('col-todo'), doing: document.getElementById('col-doing'), done: document.getElementById('col-done') };
             Object.values(cols).forEach(c => c.innerHTML = '');
-            let countMap = { todo: 0, doing: 0, done: 0 };
+            const tasks = currentUser.tasks?.[currentTab]?.[selectedSubKey] || [];
             
-            const tasks = (currentUser.tasks[currentTab] && currentUser.tasks[currentTab][selectedSubKey]) ? currentUser.tasks[currentTab][selectedSubKey] : [];
+            // تحديث النسبة المئوية
+            const progress = calculateProgress(tasks);
+            document.getElementById('progressFill').style.width = progress + '%';
+            document.getElementById('progressText').innerText = progress + '%';
 
-            tasks.forEach(task => {
-                countMap[task.status]++;
-                const div = document.createElement('div');
-                div.id = task.id; div.draggable = true;
-                div.className = 'bg-white dark:bg-slate-700 p-4 rounded-lg shadow-sm border border-slate-100 dark:border-slate-600 cursor-move flex justify-between group';
-                div.ondragstart = (e) => e.dataTransfer.setData("text", e.target.id);
-                div.innerHTML = `<span class="dark:text-slate-200">${task.text}</span><button onclick="deleteTask('${task.id}')" class="text-red-400 opacity-0 group-hover:opacity-100 transition px-2">✕</button>`;
-                cols[task.status].appendChild(div);
+            let counts = {todo:0, doing:0, done:0};
+            tasks.forEach(t => {
+                counts[t.status]++;
+                const d = document.createElement('div');
+                d.id = t.id; d.draggable = true;
+                d.className = `bg-white dark:bg-slate-700 p-4 rounded-xl shadow border dark:border-slate-600 flex justify-between items-center group cursor-grab priority-${t.priority}`;
+                
+                // إضافة الدائرة الملونة
+                d.innerHTML = `
+                    <div class="flex items-center gap-3">
+                        <div class="w-3 h-3 rounded-full dot-${t.priority} shadow-sm"></div>
+                        <span class="text-sm font-bold ${t.status === 'done' ? 'line-through text-slate-400' : ''}">${t.text}</span>
+                    </div>
+                    <button onclick="deleteTask('${t.id}')" class="text-red-400 opacity-0 group-hover:opacity-100 transition px-2">✕</button>
+                `;
+                
+                d.ondragstart = (e) => { e.dataTransfer.setData("text", e.target.id); e.target.style.opacity = "0.5"; };
+                d.ondragend = (e) => e.target.style.opacity = "1";
+                cols[t.status].appendChild(d);
             });
-            ['todo', 'doing', 'done'].forEach(k => document.getElementById('count-'+k).innerText = countMap[k]);
+            Object.keys(counts).forEach(k => document.getElementById('count-'+k).innerText = counts[k]);
+        }
+
+        window.allowDrop = (e) => { e.preventDefault(); e.currentTarget.classList.add('drag-over'); }
+        window.clearStyle = (e) => e.currentTarget.classList.remove('drag-over');
+        window.handleDrop = (e, status) => {
+            e.preventDefault(); e.currentTarget.classList.remove('drag-over');
+            const id = e.dataTransfer.getData("text");
+            const tasks = currentUser.tasks[currentTab][selectedSubKey];
+            const t = tasks.find(x => x.id === id);
+            if(t) { t.status = status; saveData(); }
         }
 
         function deleteTask(id) {
@@ -185,61 +295,38 @@
             localStorage.setItem('wp_logged_in', JSON.stringify(currentUser));
             let users = JSON.parse(localStorage.getItem('wp_users')) || [];
             let idx = users.findIndex(u => u.email === currentUser.email);
-            if(idx !== -1) {
-                users[idx] = currentUser;
-                localStorage.setItem('wp_users', JSON.stringify(users));
-            }
+            if(idx !== -1) { users[idx] = currentUser; localStorage.setItem('wp_users', JSON.stringify(users)); }
             renderBoard();
         }
 
-        // Drag & Drop
-        window.allowDrop = (e) => { e.preventDefault(); e.currentTarget.classList.add('drag-over'); }
-        window.leaveDrop = (e) => e.currentTarget.classList.remove('drag-over');
-        window.handleDrop = (e, status) => {
-            e.preventDefault(); e.currentTarget.classList.remove('drag-over');
-            const id = e.dataTransfer.getData("text");
-            const task = currentUser.tasks[currentTab][selectedSubKey].find(t => t.id === id);
-            if(task) { task.status = status; saveData(); }
+        function handleLogin() {
+            const e = document.getElementById('emailInput').value;
+            const p = document.getElementById('passInput').value;
+            const u = (JSON.parse(localStorage.getItem('wp_users')) || []).find(x => x.email === e && x.pass === p);
+            if(u) { currentUser = u; localStorage.setItem('wp_logged_in', JSON.stringify(u)); checkAuth(); }
         }
 
-        // Auth & Theme
-        function toggleTheme() {
-            const isDark = document.documentElement.classList.toggle('dark');
-            localStorage.theme = isDark ? 'dark' : 'light';
-            document.getElementById('themeIcon').innerText = isDark ? '☀️' : '🌙';
-        }
         function handleRegister() {
-            const email = document.getElementById('emailInput').value;
-            const pass = document.getElementById('passInput').value;
-            if(!email || !pass) return alert("يرجى ملء كافة الحقول");
+            const e = document.getElementById('emailInput').value;
+            const p = document.getElementById('passInput').value;
+            if(!e || !p) return;
             let users = JSON.parse(localStorage.getItem('wp_users')) || [];
-            if(users.find(u => u.email === email)) return alert("الإيميل مسجل مسبقاً");
-            users.push({ email, pass, tasks: { goals: {}, monthly: {}, weekly: {} } });
+            if(users.find(x => x.email === e)) return alert("المستخدم موجود");
+            users.push({email:e, pass:p, tasks:{}, notes:[]});
             localStorage.setItem('wp_users', JSON.stringify(users));
-            alert("تم إنشاء الحساب بنجاح!");
+            alert("تم التسجيل!");
         }
-        function handleLogin() {
-            const email = document.getElementById('emailInput').value;
-            const pass = document.getElementById('passInput').value;
-            let users = JSON.parse(localStorage.getItem('wp_users')) || [];
-            let user = users.find(u => u.email === email && u.pass === pass);
-            if(user) {
-                currentUser = user;
-                localStorage.setItem('wp_logged_in', JSON.stringify(user));
-                checkAuth();
-            } else { alert("خطأ في البيانات"); }
-        }
-        function logout() { localStorage.removeItem('wp_logged_in'); location.reload(); }
+
         function checkAuth() {
             if(currentUser) {
                 document.getElementById('authSection').classList.add('hidden-section');
                 document.getElementById('mainApp').classList.remove('hidden-section');
-                document.getElementById('userDisplay').innerText = `أهلاً: ${currentUser.email}`;
                 switchTab('goals');
+                renderNotes();
             }
         }
 
-        // Run
+        function logout() { localStorage.removeItem('wp_logged_in'); location.reload(); }
         if(localStorage.theme === 'dark') document.documentElement.classList.add('dark');
         checkAuth();
     </script>
