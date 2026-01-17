@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>WP Planner 2026</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
 /* 1. تعريف المتغيرات الشاملة للمودين */
 :root {
@@ -64,7 +65,6 @@ header h1 {
     text-align: center;
 }
 
-/* شريط التقدم */
 .progress-section { 
     margin-bottom: 30px;
     text-align: center;
@@ -88,7 +88,6 @@ header h1 {
     box-shadow: 0 0 10px rgba(45, 212, 191, 0.5);
 }
 
-/* منطقة إضافة المهام */
 .add-task-area { 
     margin-bottom: 30px;
     text-align: center;
@@ -145,7 +144,6 @@ input:focus, select:focus {
     box-shadow: 0 0 15px rgba(13, 148, 136, 0.3);
 }
 
-/* القائمة الرئيسية */
 .main-nav { 
     position: fixed;
     top: 0; 
@@ -265,7 +263,6 @@ input:focus, select:focus {
     color: white;
 }
 
-/* المؤقت */
 .pomodoro-container {
     display: flex;
     align-items: center;
@@ -309,7 +306,6 @@ input:focus, select:focus {
     border-color: var(--primary-teal);
 }
 
-/* التبويبات الفرعية */
 .sub-nav {
     display: flex;
     justify-content: center;
@@ -342,7 +338,6 @@ input:focus, select:focus {
     font-weight: 600;
 }
 
-/* الأعمدة */
 .columns-container {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
@@ -387,7 +382,6 @@ input:focus, select:focus {
     font-weight: bold;
 }
 
-/* قائمة المهام */
 .task-list { 
     list-style: none; 
     padding: 0; 
@@ -444,7 +438,6 @@ input:focus, select:focus {
 .dot-medium { background: var(--accent-yellow); }
 .dot-normal { background: var(--accent-green); }
 
-/* القائمة الجانبية */
 .sidebar {
     position: fixed;
     top: 0;
@@ -565,7 +558,6 @@ input:focus, select:focus {
     box-shadow: 0 4px 12px rgba(45, 212, 191, 0.1);
 }
 
-/* شاشة الترحيب */
 .welcome-screen {
     position: fixed;
     top: 0;
@@ -641,7 +633,6 @@ input:focus, select:focus {
     }
 }
 
-/* نظام المصادقة */
 .auth-overlay {
     position: fixed;
     top: 0;
@@ -733,6 +724,11 @@ input:focus, select:focus {
     text-decoration: underline;
 }
 
+.loading {
+    opacity: 0.6;
+    pointer-events: none;
+}
+
 @keyframes fadeIn {
     from { opacity: 0; transform: translateY(10px); }
     to { opacity: 1; transform: translateY(0); }
@@ -789,7 +785,6 @@ input:focus, select:focus {
 
     <div id="app-wrapper" style="display: none;">
         
-        <!-- شاشة الترحيب -->
         <div id="welcome-screen" class="welcome-screen" style="display: none;">
             <div class="welcome-content">
                 <h2>مرحباً</h2>
@@ -899,36 +894,25 @@ input:focus, select:focus {
     </div>
 
     <script>
-// === 1. إعداد قاعدة البيانات ===
-let db;
-const dbName = "WPPlannerDB_2026";
-const request = indexedDB.open(dbName, 3);
+// === اتصال Supabase ===
+const SUPABASE_URL = 'https://vpazkdotoxabplvfukoq.supabase.co';
+const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZwYXprZG90b3hhYnBsdmZ1a29xIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njg0MjkwOTIsImV4cCI6MjA4NDAwNTA5Mn0.3x8TVlW8kkPr9Qg0gF5Pq4V3qeszubSt2VmJi7wKzZ4';
+const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-request.onupgradeneeded = (e) => {
-    db = e.target.result;
-    if (!db.objectStoreNames.contains("tasks")) {
-        db.createObjectStore("tasks", { keyPath: "id" });
-    }
-    if (!db.objectStoreNames.contains("notes")) {
-        db.createObjectStore("notes", { keyPath: "id" });
-    }
-    if (!db.objectStoreNames.contains("users")) {
-        const userStore = db.createObjectStore("users", { keyPath: "email" });
-        userStore.createIndex("name", "name", { unique: true });
-    }
+// === متغيرات التطبيق ===
+let appState = { 
+    view: 'week', 
+    currentSub: ''
 };
 
-request.onsuccess = (e) => {
-    db = e.target.result;
-    checkLoginStatus();
+const subData = {
+    week: ['السبت', 'الأحد', 'الاثنين', 'الثلاثاء', 'الأربعاء', 'الخميس', 'الجمعة'],
+    month: ['يناير', 'فبراير', 'مارس', 'أبريل', 'مايو', 'يونيو', 'يوليو', 'أغسطس', 'سبتمبر', 'أكتوبر', 'نوفمبر', 'ديسمبر'],
+    year: ['2026']
 };
 
-request.onerror = (e) => {
-    console.error("خطأ في فتح قاعدة البيانات:", e);
-};
-
-// === 2. نظام المصادقة ===
-function checkLoginStatus() {
+// === التحقق من حالة تسجيل الدخول ===
+async function checkLoginStatus() {
     const user = localStorage.getItem('currentUser');
     if (user) {
         document.getElementById('auth-container').style.display = 'none';
@@ -944,11 +928,6 @@ function showWelcomeScreen(userName) {
     
     userNameEl.textContent = userName;
     welcomeScreen.style.display = 'flex';
-    
-    // بعد 3 ثواني تختفي تلقائياً (اختياري)
-    // setTimeout(() => {
-    //     closeWelcomeScreen();
-    // }, 3000);
 }
 
 function closeWelcomeScreen() {
@@ -972,7 +951,8 @@ function showLogin() {
     document.getElementById('login-box').style.display = 'block';
 }
 
-function signup() {
+// === التسجيل ===
+async function signup() {
     const name = document.getElementById('signup-name').value.trim();
     const email = document.getElementById('signup-email').value.trim();
     const password = document.getElementById('signup-password').value;
@@ -987,21 +967,27 @@ function signup() {
         return;
     }
 
-    const transaction = db.transaction(["users"], "readwrite");
-    const store = transaction.objectStore("users");
-    const newUser = { name, email, password, xp: 0 };
-    
-    const addRequest = store.add(newUser);
-    addRequest.onsuccess = () => {
+    try {
+        const { data, error } = await supabase
+            .from('users')
+            .insert([{ name, email, password, xp: 0 }])
+            .select();
+
+        if (error) {
+            alert("هذا البريد أو الاسم مسجل مسبقاً");
+            return;
+        }
+
         alert("تم إنشاء الحساب بنجاح!");
         showLogin();
-    };
-    addRequest.onerror = () => {
-        alert("هذا البريد أو الاسم مسجل مسبقاً");
-    };
+    } catch (err) {
+        console.error(err);
+        alert("حدث خطأ أثناء التسجيل");
+    }
 }
 
-function login() {
+// === تسجيل الدخول ===
+async function login() {
     const identifier = document.getElementById('login-identifier').value.trim();
     const password = document.getElementById('login-password').value;
 
@@ -1010,28 +996,30 @@ function login() {
         return;
     }
 
-    const store = db.transaction("users").objectStore("users");
-    let userFound = false;
+    try {
+        const { data, error } = await supabase
+            .from('users')
+            .select('*')
+            .or(`email.eq.${identifier},name.eq.${identifier}`)
+            .eq('password', password)
+            .single();
 
-    store.openCursor().onsuccess = (e) => {
-        const cursor = e.target.result;
-        if (cursor) {
-            const user = cursor.value;
-            if ((user.email === identifier || user.name === identifier) && user.password === password) {
-                userFound = true;
-                localStorage.setItem('currentUser', JSON.stringify(user));
-                document.getElementById('auth-container').style.display = 'none';
-                document.getElementById('app-wrapper').style.display = 'block';
-                showWelcomeScreen(user.name);
-                return;
-            }
-            cursor.continue();
-        } else if (!userFound) {
+        if (error || !data) {
             alert("خطأ في البيانات المدخلة");
+            return;
         }
-    };
+
+        localStorage.setItem('currentUser', JSON.stringify(data));
+        document.getElementById('auth-container').style.display = 'none';
+        document.getElementById('app-wrapper').style.display = 'block';
+        showWelcomeScreen(data.name);
+    } catch (err) {
+        console.error(err);
+        alert("حدث خطأ أثناء تسجيل الدخول");
+    }
 }
 
+// === تسجيل الخروج ===
 function logout() {
     if (confirm("هل تريد تسجيل الخروج؟")) {
         localStorage.removeItem('currentUser');
@@ -1039,18 +1027,7 @@ function logout() {
     }
 }
 
-// === 3. إدارة المهام ===
-let appState = { 
-    view: 'week', 
-    currentSub: ''
-};
-
-const subData = {
-    week: ['السبت', 'الأحد', 'الاثنين', 'الثلاثاء', 'الأربعاء', 'الخميس', 'الجمعة'],
-    month: ['يناير', 'فبراير', 'مارس', 'أبريل', 'مايو', 'يونيو', 'يوليو', 'أغسطس', 'سبتمبر', 'أكتوبر', 'نوفمبر', 'ديسمبر'],
-    year: ['2026']
-};
-
+// === إدارة المهام ===
 function getTodayName() {
     const days = ['الأحد', 'الاثنين', 'الثلاثاء', 'الأربعاء', 'الخميس', 'الجمعة', 'السبت'];
     return days[new Date().getDay()];
@@ -1103,7 +1080,8 @@ function switchSub(item) {
     renderTasksFromDB();
 }
 
-function addNewTask() {
+// === إضافة مهمة جديدة ===
+async function addNewTask() {
     const input = document.getElementById('task-input');
     const text = input.value.trim();
     
@@ -1124,28 +1102,45 @@ function addNewTask() {
         recursion,
         view: appState.view,
         sub: appState.currentSub,
-        userEmail: user.email,
-        lastCreated: new Date().toLocaleDateString()
+        user_email: user.email,
+        last_created: new Date().toLocaleDateString()
     };
 
-    const transaction = db.transaction(["tasks"], "readwrite");
-    transaction.objectStore("tasks").add(newTask);
-    
-    transaction.oncomplete = () => {
+    try {
+        const { error } = await supabase
+            .from('tasks')
+            .insert([newTask]);
+
+        if (error) throw error;
+
         input.value = '';
         renderTasksFromDB();
-    };
+    } catch (err) {
+        console.error(err);
+        alert("حدث خطأ أثناء إضافة المهمة");
+    }
 }
 
-function deleteTaskFromDB(id) {
+// === حذف مهمة ===
+async function deleteTaskFromDB(id) {
     if (!confirm("هل تريد حذف هذه المهمة؟")) return;
     
-    const transaction = db.transaction(["tasks"], "readwrite");
-    transaction.objectStore("tasks").delete(id);
-    transaction.oncomplete = () => renderTasksFromDB();
+    try {
+        const { error } = await supabase
+            .from('tasks')
+            .delete()
+            .eq('id', id);
+
+        if (error) throw error;
+        renderTasksFromDB();
+    } catch (err) {
+        console.error(err);
+        alert("حدث خطأ أثناء حذف المهمة");
+    }
 }
 
-function renderTasksFromDB() {
+// === عرض المهام ===
+async function renderTasksFromDB() {
     const lists = {
         todo: document.getElementById('list-todo'),
         doing: document.getElementById('list-doing'),
@@ -1159,48 +1154,49 @@ function renderTasksFromDB() {
     const user = JSON.parse(localStorage.getItem('currentUser'));
     const counts = { todo: 0, doing: 0, done: 0 };
 
-    const store = db.transaction("tasks").objectStore("tasks");
-    
-    store.openCursor().onsuccess = (e) => {
-        const cursor = e.target.result;
-        if (cursor) {
-            const task = cursor.value;
-            if (task.view === appState.view && 
-                task.sub === appState.currentSub && 
-                task.userEmail === user.email) {
-                
-                const li = document.createElement('li');
-                li.className = 'task-item';
-                li.id = task.id;
-                li.draggable = true;
-                
-                li.ondragstart = (e) => {
-                    e.dataTransfer.setData("text", e.target.id);
-                    e.target.classList.add('dragging');
-                };
-                
-                li.ondragend = (e) => {
-                    e.target.classList.remove('dragging');
-                };
-                
-                li.innerHTML = `
-                    <div style="display:flex; align-items:center; gap:10px;">
-                        <span class="importance-dot dot-${task.importance}"></span>
-                        <span>${task.text} ${task.recursion === 'daily' ? '🔄' : ''}</span>
-                    </div>
-                    <button onclick="deleteTaskFromDB(${task.id})" 
-                            style="background:none; border:none; color:#ff7675; cursor:pointer; font-size:1.5rem; line-height:1;">×</button>
-                `;
-                
-                lists[task.status].appendChild(li);
-                counts[task.status]++;
-            }
-            cursor.continue();
-        } else {
-            updateCounts(counts);
-            updateProgress(counts);
-        }
-    };
+    try {
+        const { data, error } = await supabase
+            .from('tasks')
+            .select('*')
+            .eq('user_email', user.email)
+            .eq('view', appState.view)
+            .eq('sub', appState.currentSub);
+
+        if (error) throw error;
+
+        data.forEach(task => {
+            const li = document.createElement('li');
+            li.className = 'task-item';
+            li.id = task.id;
+            li.draggable = true;
+            
+            li.ondragstart = (e) => {
+                e.dataTransfer.setData("text", e.target.id);
+                e.target.classList.add('dragging');
+            };
+            
+            li.ondragend = (e) => {
+                e.target.classList.remove('dragging');
+            };
+            
+            li.innerHTML = `
+                <div style="display:flex; align-items:center; gap:10px;">
+                    <span class="importance-dot dot-${task.importance}"></span>
+                    <span>${task.text} ${task.recursion === 'daily' ? '🔄' : ''}</span>
+                </div>
+                <button onclick="deleteTaskFromDB(${task.id})" 
+                        style="background:none; border:none; color:#ff7675; cursor:pointer; font-size:1.5rem; line-height:1;">×</button>
+            `;
+            
+            lists[task.status].appendChild(li);
+            counts[task.status]++;
+        });
+
+        updateCounts(counts);
+        updateProgress(counts);
+    } catch (err) {
+        console.error(err);
+    }
 }
 
 function updateCounts(counts) {
@@ -1217,7 +1213,7 @@ function updateProgress(counts) {
     document.getElementById('progress-text').innerText = `تم إنجاز ${percentage}%`;
 }
 
-// === 4. السحب والإفلات ===
+// === السحب والإفلات ===
 function allowDrop(e) {
     e.preventDefault();
     e.currentTarget.classList.add('drag-over');
@@ -1227,34 +1223,33 @@ function dragLeave(e) {
     e.currentTarget.classList.remove('drag-over');
 }
 
-function drop(e) {
+async function drop(e) {
     e.preventDefault();
     e.currentTarget.classList.remove('drag-over');
     
     const id = parseInt(e.dataTransfer.getData("text"));
     const newStatus = e.currentTarget.id.replace('list-', '');
     
-    const transaction = db.transaction(["tasks"], "readwrite");
-    const store = transaction.objectStore("tasks");
-    
-    store.get(id).onsuccess = (event) => {
-        const task = event.target.result;
-        if (task) {
-            task.status = newStatus;
-            store.put(task);
-        }
-    };
-    
-    transaction.oncomplete = () => renderTasksFromDB();
+    try {
+        const { error } = await supabase
+            .from('tasks')
+            .update({ status: newStatus })
+            .eq('id', id);
+
+        if (error) throw error;
+        renderTasksFromDB();
+    } catch (err) {
+        console.error(err);
+    }
 }
 
-// === 5. إدارة الملاحظات ===
+// === إدارة الملاحظات ===
 function toggleNotes() {
     const sidebar = document.getElementById('notes-sidebar');
     sidebar.classList.toggle('active');
 }
 
-function addNote() {
+async function addNote() {
     const titleEl = document.getElementById('note-title');
     const bodyEl = document.getElementById('note-body');
     const user = JSON.parse(localStorage.getItem('currentUser'));
@@ -1268,56 +1263,73 @@ function addNote() {
         id: Date.now(),
         title: titleEl.value.trim(),
         body: bodyEl.value.trim(),
-        userEmail: user.email
+        user_email: user.email
     };
 
-    const transaction = db.transaction(["notes"], "readwrite");
-    transaction.objectStore("notes").add(newNote);
-    
-    transaction.oncomplete = () => {
+    try {
+        const { error } = await supabase
+            .from('notes')
+            .insert([newNote]);
+
+        if (error) throw error;
+
         titleEl.value = '';
         bodyEl.value = '';
         renderNotesFromDB();
-    };
+    } catch (err) {
+        console.error(err);
+        alert("حدث خطأ أثناء إضافة الملاحظة");
+    }
 }
 
-function renderNotesFromDB(filter = "") {
+async function renderNotesFromDB(filter = "") {
     const area = document.getElementById('notes-list');
     area.innerHTML = '';
     
     const user = JSON.parse(localStorage.getItem('currentUser'));
-    const store = db.transaction("notes").objectStore("notes");
     
-    store.openCursor().onsuccess = (e) => {
-        const cursor = e.target.result;
-        if (cursor) {
-            const note = cursor.value;
-            if (note.userEmail === user.email && 
-                note.title.toLowerCase().includes(filter.toLowerCase())) {
-                
-                const div = document.createElement('div');
-                div.className = 'note-card';
-                div.innerHTML = `
-                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
-                        <h4 style="margin:0; color:var(--primary-teal);">${note.title}</h4>
-                        <button onclick="deleteNoteFromDB(${note.id})" 
-                                style="color:#ff7675; cursor:pointer; background:none; border:none; font-size:1.5rem; line-height:1;">×</button>
-                    </div>
-                    <p style="white-space: pre-wrap; font-size:0.9rem; opacity:0.85; margin:0;">${note.body}</p>
-                `;
-                area.appendChild(div);
-            }
-            cursor.continue();
-        }
-    };
+    try {
+        const { data, error } = await supabase
+            .from('notes')
+            .select('*')
+            .eq('user_email', user.email)
+            .ilike('title', `%${filter}%`);
+
+        if (error) throw error;
+
+        data.forEach(note => {
+            const div = document.createElement('div');
+            div.className = 'note-card';
+            div.innerHTML = `
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
+                    <h4 style="margin:0; color:var(--primary-teal);">${note.title}</h4>
+                    <button onclick="deleteNoteFromDB(${note.id})" 
+                            style="color:#ff7675; cursor:pointer; background:none; border:none; font-size:1.5rem; line-height:1;">×</button>
+                </div>
+                <p style="white-space: pre-wrap; font-size:0.9rem; opacity:0.85; margin:0;">${note.body}</p>
+            `;
+            area.appendChild(div);
+        });
+    } catch (err) {
+        console.error(err);
+    }
 }
 
-function deleteNoteFromDB(id) {
+async function deleteNoteFromDB(id) {
     if (!confirm("هل تريد حذف هذه الملاحظة؟")) return;
     
-    const transaction = db.transaction(["notes"], "readwrite");
-    transaction.objectStore("notes").delete(id);
-    transaction.oncomplete = () => renderNotesFromDB();
+    try {
+        const { error } = await supabase
+            .from('notes')
+            .delete()
+            .eq('id', id);
+
+        if (error) throw error;
+        renderNotesFromDB();
+    } catch (err) {
+        console.error(err);
+        alert("حدث خطأ أثناء حذف الملاحظة");
+    }
 }
 
 function filterNotes() {
@@ -1325,7 +1337,7 @@ function filterNotes() {
     renderNotesFromDB(searchValue);
 }
 
-// === 6. المؤقت ===
+// === المؤقت ===
 let timerInterval;
 let isRunning = false;
 let timeLeft = 25 * 60;
@@ -1374,7 +1386,7 @@ function resetTimer() {
     document.getElementById('pomodoro').classList.remove('timer-running');
 }
 
-// === 7. الثيم ===
+// === الثيم ===
 function toggleTheme() {
     const currentTheme = document.documentElement.getAttribute('data-theme');
     const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
@@ -1393,7 +1405,7 @@ function updateThemeIcon(theme) {
     }
 }
 
-// === 8. التهيئة ===
+// === التهيئة ===
 function initApp() {
     const savedTheme = localStorage.getItem('theme') || 'dark';
     document.documentElement.setAttribute('data-theme', savedTheme);
@@ -1403,6 +1415,9 @@ function initApp() {
     renderNotesFromDB();
     switchView('week');
 }
+
+// بدء التطبيق
+checkLoginStatus();
     </script>
 </body>
 </html>
