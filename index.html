@@ -1,336 +1,1408 @@
-
-
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>WP - Planner 2026</title>
-    <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700&display=swap" rel="stylesheet">
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script>
-        tailwind.config = {
-            darkMode: 'class',
-            theme: {
-                extend: {
-                    colors: { primary: '#5eead4', primaryDark: '#0f766e', bgLight: '#f3f4f6', bgDark: '#0f172a' }
-                }
-            }
-        }
-    </script>
+    <title>WP Planner 2026</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
-        body { font-family: 'Tajawal', sans-serif; transition: all 0.3s; }
-        .hidden-section { display: none !important; }
-        .active-tab { background-color: #0f766e !important; color: white !important; }
-        #notesSidebar { transition: transform 0.3s ease-in-out; }
-        .sidebar-open { transform: translateX(0) !important; }
-        #noteModalOverlay { background: rgba(0,0,0,0.7); backdrop-filter: blur(4px); }
-        .column-drop-zone { min-height: 200px; border-radius: 1rem; transition: background 0.2s; }
-        .drag-over { background-color: rgba(94, 234, 212, 0.1); border: 2px dashed #5eead4; }
-        
-        /* ألوان المهام الجديدة */
-        .priority-low { border-right: 5px solid #10b981; } /* أخضر */
-        .priority-medium { border-right: 5px solid #f59e0b; } /* أصفر */
-        .priority-high { border-right: 5px solid #ef4444; } /* أحمر */
-        
-        .dot-low { background-color: #10b981; }
-        .dot-medium { background-color: #f59e0b; }
-        .dot-high { background-color: #ef4444; }
+/* 1. تعريف المتغيرات الشاملة للمودين */
+:root {
+    --bg-dark: #0f172a;
+    --card-bg: #1e293b;
+    --text-color: #f8fafc;
+    --input-bg: #0f172a;
+    --tab-inactive: #334155;
+    --tab-text: #94a3b8;
+    --border-color: #334155;
+    --header-bg: #1e293b;
+    --accent-green: #10b981;
+    --accent-yellow: #f59e0b;
+    --accent-red: #ef4444;
+    --primary-teal: #2dd4bf;
+}
+
+[data-theme="light"] {
+    --bg-dark: #f1f5f9;
+    --card-bg: #ffffff;
+    --text-color: #0f172a;
+    --input-bg: #f8fafc;
+    --tab-inactive: #e2e8f0;
+    --tab-text: #475569;
+    --border-color: #cbd5e1;
+}
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    background-color: var(--bg-dark);
+    color: var(--text-color);
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    direction: rtl;
+    transition: background-color 0.3s, color 0.3s;
+}
+
+.container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 30px 20px;
+}
+
+.main-content {
+    margin-top: 80px;
+}
+
+header h1 {
+    color: var(--primary-teal);
+    margin-bottom: 15px;
+    font-size: 2rem;
+    font-weight: 700;
+    text-align: center;
+}
+
+/* شريط التقدم */
+.progress-section { 
+    margin-bottom: 30px;
+    text-align: center;
+}
+
+.progress-bar-container {
+    background: #334155;
+    height: 12px;
+    border-radius: 10px;
+    width: 50%;
+    margin: 15px auto;
+    overflow: hidden;
+    box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+.progress-bar { 
+    background: linear-gradient(90deg, var(--primary-teal), #0d9488); 
+    height: 100%; 
+    width: 0%; 
+    transition: width 0.5s ease;
+    box-shadow: 0 0 10px rgba(45, 212, 191, 0.5);
+}
+
+/* منطقة إضافة المهام */
+.add-task-area { 
+    margin-bottom: 30px;
+    text-align: center;
+}
+
+.input-group { 
+    display: inline-flex; 
+    gap: 12px; 
+    background: var(--card-bg); 
+    padding: 15px 20px;
+    border-radius: 15px; 
+    border: 1px solid var(--border-color);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+    flex-wrap: wrap;
+    justify-content: center;
+}
+
+input, select {
+    background: var(--input-bg);
+    color: var(--text-color);
+    border: 1px solid var(--border-color);
+    padding: 10px 14px;
+    border-radius: 8px;
+    outline: none;
+    transition: 0.3s;
+    font-family: inherit;
+    font-size: 0.95rem;
+}
+
+input:focus, select:focus {
+    border-color: var(--primary-teal);
+    box-shadow: 0 0 8px rgba(45, 212, 191, 0.2);
+}
+
+#task-input {
+    min-width: 250px;
+    flex: 1;
+}
+
+.add-btn {
+    background: var(--primary-teal);
+    color: var(--bg-dark);
+    cursor: pointer;
+    border: none;
+    font-weight: bold;
+    padding: 10px 25px;
+    border-radius: 8px;
+    transition: 0.3s;
+    font-size: 1rem;
+}
+
+.add-btn:hover { 
+    background: #0d9488;
+    box-shadow: 0 0 15px rgba(13, 148, 136, 0.3);
+}
+
+/* القائمة الرئيسية */
+.main-nav { 
+    position: fixed;
+    top: 0; 
+    left: 0; 
+    right: 0;
+    display: flex; 
+    justify-content: space-between; 
+    align-items: center; 
+    padding: 15px 40px; 
+    background: var(--card-bg); 
+    border-bottom: 1px solid var(--border-color);
+    z-index: 1000;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+}
+
+.nav-right {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+    flex-wrap: wrap;
+}
+
+.nav-left {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+}
+
+.nav-btn {
+    background: var(--tab-inactive);
+    color: var(--tab-text);
+    border: none; 
+    padding: 8px 18px;
+    border-radius: 8px; 
+    cursor: pointer;
+    transition: 0.3s;
+    font-weight: 500;
+    font-size: 0.95rem;
+}
+
+.nav-btn:hover {
+    background: var(--primary-teal);
+    color: var(--bg-dark);
+}
+
+.nav-btn.active { 
+    background: var(--primary-teal);
+    color: var(--bg-dark);
+    font-weight: bold;
+}
+
+.notes-word {
+    background: none;
+    border: 1px solid var(--primary-teal);
+    color: var(--primary-teal);
+    padding: 8px 18px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-weight: bold;
+    transition: 0.3s ease;
+}
+
+.notes-word:hover {
+    background: var(--primary-teal);
+    color: var(--bg-dark);
+}
+
+.app-brand {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+}
+
+.app-name {
+    font-size: 1.3rem;
+    font-weight: 800;
+    color: var(--primary-teal);
+    letter-spacing: 0.5px;
+}
+
+.theme-icon-container {
+    font-size: 1.4rem;
+    cursor: pointer;
+    width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 8px;
+    transition: 0.3s;
+    background: var(--tab-inactive);
+    color: var(--text-color);
+}
+
+.theme-icon-container:hover {
+    background: var(--primary-teal);
+    color: var(--bg-dark);
+}
+
+.logout-link {
+    background: none;
+    border: 1px solid #ff7675;
+    color: #ff7675;
+    width: 38px;
+    height: 38px;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: 0.3s;
+    font-size: 1.1rem;
+}
+
+.logout-link:hover {
+    background: #ff7675;
+    color: white;
+}
+
+/* المؤقت */
+.pomodoro-container {
+    display: flex;
+    align-items: center;
+    background: var(--input-bg);
+    padding: 5px 15px;
+    border-radius: 12px;
+    border: 1px solid var(--border-color);
+    gap: 10px;
+}
+
+.timer-display {
+    font-family: 'monospace';
+    font-weight: bold;
+    color: var(--primary-teal);
+    font-size: 1.1rem;
+    min-width: 55px;
+}
+
+#timer-btn {
+    background: var(--primary-teal);
+    color: white;
+    border: none;
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.8rem;
+    transition: 0.3s;
+}
+
+#timer-btn:hover {
+    background: #0d9488;
+    transform: scale(1.1);
+}
+
+.timer-running {
+    box-shadow: 0 0 10px rgba(45, 212, 191, 0.5);
+    border-color: var(--primary-teal);
+}
+
+/* التبويبات الفرعية */
+.sub-nav {
+    display: flex;
+    justify-content: center;
+    gap: 12px;
+    margin: 25px 0;
+    flex-wrap: wrap;
+}
+
+.sub-tab {
+    background: var(--tab-inactive);
+    color: var(--tab-text);
+    border: none;
+    padding: 8px 18px;
+    border-radius: 20px;
+    cursor: pointer;
+    transition: 0.3s;
+    font-weight: 500;
+    font-size: 0.9rem;
+}
+
+.sub-tab:hover {
+    background: var(--primary-teal);
+    color: var(--bg-dark);
+}
+
+.sub-tab.active {
+    background: var(--primary-teal);
+    color: var(--bg-dark);
+    box-shadow: 0 0 15px rgba(45, 212, 191, 0.4);
+    font-weight: 600;
+}
+
+/* الأعمدة */
+.columns-container {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 20px;
+}
+
+.column { 
+    background: var(--card-bg);
+    min-height: 400px;
+    border-radius: 20px; 
+    padding: 20px;
+    border-top: 5px solid transparent;
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+}
+
+.todo-col { border-color: var(--accent-red); }
+.doing-col { border-color: var(--accent-yellow); }
+.done-col { border-color: var(--accent-green); }
+
+.col-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 25px;
+    padding-bottom: 15px;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.col-header h3 {
+    margin: 0;
+    font-size: 1.3rem;
+    color: var(--text-color);
+    font-weight: 600;
+}
+
+.count {
+    background: var(--tab-inactive);
+    color: var(--text-color);
+    padding: 4px 14px;
+    border-radius: 12px;
+    font-size: 0.85rem;
+    font-weight: bold;
+}
+
+/* قائمة المهام */
+.task-list { 
+    list-style: none; 
+    padding: 0; 
+    margin: 0;
+    min-height: 100px;
+    transition: background 0.2s;
+    border-radius: 10px;
+}
+
+.task-list.drag-over {
+    background: rgba(45, 212, 191, 0.05);
+}
+
+.task-item {
+    background: var(--input-bg);
+    color: var(--text-color);
+    margin-bottom: 12px;
+    padding: 14px 16px;
+    border-radius: 12px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border: 1px solid var(--border-color);
+    animation: fadeIn 0.3s ease;
+    cursor: grab;
+    transition: all 0.3s ease;
+}
+
+.task-item:hover {
+    border-color: var(--primary-teal);
+    box-shadow: 0 4px 12px rgba(45, 212, 191, 0.1);
+}
+
+.task-item.dragging {
+    opacity: 0.5;
+    background: rgba(255, 255, 255, 0.05);
+    border: 2px dashed var(--primary-teal);
+    transform: scale(0.95);
+}
+
+.task-item:active {
+    cursor: grabbing;
+}
+
+.importance-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    display: inline-block;
+    margin-left: 10px;
+}
+
+.dot-urgent { background: var(--accent-red); }
+.dot-medium { background: var(--accent-yellow); }
+.dot-normal { background: var(--accent-green); }
+
+/* القائمة الجانبية */
+.sidebar {
+    position: fixed;
+    top: 0;
+    right: -350px;
+    width: 320px;
+    height: 100%;
+    background: var(--card-bg);
+    z-index: 2000;
+    transition: right 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    display: flex;
+    flex-direction: column;
+    box-shadow: -5px 0 20px rgba(0, 0, 0, 0.4);
+}
+
+.sidebar.active {
+    right: 0;
+}
+
+.sidebar-header {
+    background-color: var(--primary-teal);
+    padding: 18px 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    color: var(--bg-dark);
+    border-bottom: 2px solid rgba(0, 0, 0, 0.1);
+}
+
+.sidebar-header h3 {
+    margin: 0;
+    font-size: 1.2rem;
+    font-weight: bold;
+}
+
+.close-btn {
+    background: none;
+    border: none;
+    color: var(--bg-dark);
+    font-size: 1.8rem;
+    cursor: pointer;
+    width: 35px;
+    height: 35px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 6px;
+    transition: 0.3s;
+}
+
+.close-btn:hover {
+    background: rgba(0, 0, 0, 0.1);
+}
+
+.note-inputs {
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+.note-inputs input, 
+.note-inputs textarea {
+    width: 100%;
+    background: var(--input-bg);
+    border: 1px solid var(--border-color);
+    color: var(--text-color);
+    padding: 12px;
+    border-radius: 8px;
+    font-family: inherit;
+    outline: none;
+    font-size: 0.95rem;
+    transition: 0.3s;
+}
+
+.note-inputs input:focus,
+.note-inputs textarea:focus {
+    border-color: var(--primary-teal);
+    box-shadow: 0 0 8px rgba(45, 212, 191, 0.2);
+}
+
+.note-inputs textarea {
+    height: 120px;
+    resize: none;
+}
+
+.add-note-btn {
+    background-color: var(--primary-teal);
+    color: var(--bg-dark);
+    border: none;
+    padding: 12px;
+    border-radius: 8px;
+    font-weight: bold;
+    cursor: pointer;
+    font-size: 1rem;
+    transition: 0.3s;
+}
+
+.add-note-btn:hover {
+    background-color: #0d9488;
+}
+
+.notes-display-area {
+    padding: 0 20px 20px 20px;
+    overflow-y: auto;
+    flex: 1;
+}
+
+.note-card {
+    background: var(--input-bg);
+    padding: 15px;
+    border-radius: 10px;
+    margin-top: 15px;
+    border-right: 4px solid var(--primary-teal);
+    transition: 0.3s;
+}
+
+.note-card:hover {
+    box-shadow: 0 4px 12px rgba(45, 212, 191, 0.1);
+}
+
+/* شاشة الترحيب */
+.welcome-screen {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: var(--bg-dark);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 10000;
+    opacity: 1;
+    transition: opacity 0.5s ease;
+}
+
+.welcome-screen.fade-out {
+    opacity: 0;
+    pointer-events: none;
+}
+
+.welcome-content {
+    text-align: center;
+    animation: welcomeSlide 0.8s ease-out;
+}
+
+.welcome-content h2 {
+    font-size: 3rem;
+    color: var(--primary-teal);
+    margin-bottom: 20px;
+    font-weight: 800;
+}
+
+.welcome-content .user-name {
+    font-size: 2.5rem;
+    color: var(--text-color);
+    font-weight: 600;
+    margin-bottom: 40px;
+}
+
+.welcome-content p {
+    font-size: 1.2rem;
+    color: var(--tab-text);
+    margin-bottom: 30px;
+}
+
+.start-btn {
+    background: var(--primary-teal);
+    color: var(--bg-dark);
+    border: none;
+    padding: 15px 40px;
+    border-radius: 10px;
+    font-size: 1.2rem;
+    font-weight: bold;
+    cursor: pointer;
+    transition: 0.3s;
+    box-shadow: 0 4px 15px rgba(45, 212, 191, 0.3);
+}
+
+.start-btn:hover {
+    background: #0d9488;
+    transform: translateY(-3px);
+    box-shadow: 0 6px 20px rgba(45, 212, 191, 0.5);
+}
+
+@keyframes welcomeSlide {
+    from {
+        opacity: 0;
+        transform: translateY(-50px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* نظام المصادقة */
+.auth-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: var(--bg-dark);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 9999;
+}
+
+.auth-box {
+    background: var(--card-bg);
+    padding: 45px 40px;
+    border-radius: 20px;
+    width: 100%;
+    max-width: 420px;
+    box-shadow: 0 20px 45px rgba(0, 0, 0, 0.5);
+    text-align: center;
+    border: 1px solid var(--border-color);
+}
+
+.auth-box h2 {
+    color: var(--primary-teal);
+    margin-bottom: 30px;
+    font-size: 1.8rem;
+    font-weight: 700;
+}
+
+.auth-inputs {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+    margin-bottom: 25px;
+}
+
+.auth-box input {
+    width: 100%;
+    padding: 12px 15px;
+    border-radius: 10px;
+    border: 1px solid var(--border-color);
+    background: var(--input-bg);
+    color: var(--text-color);
+    font-family: inherit;
+    font-size: 1rem;
+    outline: none;
+    transition: 0.3s;
+}
+
+.auth-box input:focus {
+    border-color: var(--primary-teal);
+    box-shadow: 0 0 12px rgba(45, 212, 191, 0.2);
+}
+
+.auth-btn {
+    width: 100%;
+    padding: 12px;
+    border-radius: 10px;
+    border: none;
+    background: var(--primary-teal);
+    color: var(--bg-dark);
+    font-weight: bold;
+    font-size: 1.1rem;
+    cursor: pointer;
+    transition: 0.3s;
+}
+
+.auth-btn:hover {
+    background: #0d9488;
+    transform: translateY(-2px);
+}
+
+.auth-box p {
+    margin-top: 20px;
+    font-size: 0.9rem;
+    color: var(--tab-text);
+}
+
+.auth-box a {
+    color: var(--primary-teal);
+    text-decoration: none;
+    font-weight: bold;
+    transition: 0.3s;
+}
+
+.auth-box a:hover {
+    text-decoration: underline;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+@media (max-width: 768px) {
+    .main-nav {
+        padding: 10px 15px;
+    }
+    
+    .nav-right, .nav-left {
+        gap: 5px;
+    }
+    
+    .app-name {
+        font-size: 1rem;
+    }
+    
+    .input-group {
+        flex-direction: column;
+    }
+    
+    .columns-container {
+        grid-template-columns: 1fr;
+    }
+}
     </style>
 </head>
-<body class="bg-bgLight dark:bg-bgDark text-slate-800 dark:text-slate-200 min-h-screen">
+<body>
 
-    <div id="noteModalOverlay" class="fixed inset-0 z-[200] hidden flex items-center justify-center p-4" onclick="closeNoteModal()">
-        <div class="bg-white dark:bg-slate-800 w-full max-w-lg rounded-2xl shadow-2xl overflow-hidden" onclick="event.stopPropagation()">
-            <div class="p-4 bg-primaryDark text-white flex justify-between">
-                <span class="font-bold">تعديل الملاحظة</span>
-                <button onclick="closeNoteModal()" class="text-2xl">&times;</button>
+    <div id="auth-container" class="auth-overlay">
+        <div class="auth-box" id="login-box">
+            <h2>تسجيل الدخول</h2>
+            <div class="auth-inputs">
+                <input type="text" id="login-identifier" placeholder="البريد الإلكتروني أو الاسم">
+                <input type="password" id="login-password" placeholder="كلمة المرور">
             </div>
-            <div class="p-6 space-y-4 text-right">
-                <input type="text" id="editNoteTitle" class="w-full p-2 border rounded dark:bg-slate-700 dark:border-slate-600 outline-none">
-                <textarea id="editNoteContent" rows="6" class="w-full p-2 border rounded dark:bg-slate-700 dark:border-slate-600 outline-none resize-none"></textarea>
-                <div class="flex justify-end gap-2">
-                    <button onclick="saveNoteEdit()" class="bg-primaryDark text-white px-6 py-2 rounded-lg font-bold">حفظ</button>
+            <button onclick="login()" class="auth-btn">دخول</button>
+            <p>ليس لديك حساب؟ <a href="#" onclick="showSignup(); return false;">إنشاء حساب جديد</a></p>
+        </div>
+
+        <div class="auth-box" id="signup-box" style="display: none;">
+            <h2>إنشاء حساب</h2>
+            <div class="auth-inputs">
+                <input type="text" id="signup-name" placeholder="الاسم الكامل">
+                <input type="email" id="signup-email" placeholder="البريد الإلكتروني">
+                <input type="password" id="signup-password" placeholder="كلمة المرور">
+                <input type="password" id="signup-confirm" placeholder="تأكيد كلمة المرور">
+            </div>
+            <button onclick="signup()" class="auth-btn">تسجيل</button>
+            <p>لديك حساب بالفعل؟ <a href="#" onclick="showLogin(); return false;">تسجيل الدخول</a></p>
+        </div>
+    </div>
+
+    <div id="app-wrapper" style="display: none;">
+        
+        <!-- شاشة الترحيب -->
+        <div id="welcome-screen" class="welcome-screen" style="display: none;">
+            <div class="welcome-content">
+                <h2>مرحباً</h2>
+                <div class="user-name" id="welcome-user-name"></div>
+                <p>استعد لتحقيق أهدافك وإنجاز مهامك! 🚀</p>
+                <button class="start-btn" onclick="closeWelcomeScreen()">ابدأ الآن</button>
+            </div>
+        </div>
+        
+        <nav class="main-nav" id="navbar">
+            <div class="nav-right">
+                <button class="nav-btn active" onclick="switchView('week')">الأسابيع</button>
+                <button class="nav-btn" onclick="switchView('month')">الشهور</button>
+                <button class="nav-btn" onclick="switchView('year')">السنة</button>
+                <button class="notes-word" onclick="toggleNotes()">ملاحظات</button>
+
+                <div class="pomodoro-container" id="pomodoro">
+                    <div class="timer-display">
+                        <span id="timer-minutes">25</span>:<span id="timer-seconds">00</span>
+                    </div>
+                    <button onclick="toggleTimer()" id="timer-btn" title="ابدأ التركيز">
+                        <i class="fa-solid fa-play"></i>
+                    </button>
                 </div>
             </div>
-        </div>
-    </div>
-
-    <div class="fixed top-5 left-5 z-50 flex flex-col gap-3">
-        <button onclick="toggleTheme()" class="p-3 rounded-full bg-white dark:bg-slate-700 shadow-lg hover:scale-110 transition">
-            <span id="themeIcon">🌙</span>
-        </button>
-    </div>
-
-    <div id="notesSidebar" class="fixed top-0 right-0 h-full w-80 bg-white dark:bg-slate-800 shadow-2xl z-[100] transform translate-x-full border-l dark:border-slate-700 flex flex-col">
-        <div class="p-5 border-b dark:border-slate-700 flex justify-between bg-primaryDark text-white">
-            <h3 class="font-bold">الملاحظات الشخصية</h3>
-            <button onclick="toggleNotes()" class="text-2xl">&times;</button>
-        </div>
-        <div class="p-4 space-y-3 bg-slate-50 dark:bg-slate-900/50">
-            <input type="text" id="noteTitleInput" placeholder="عنوان الملاحظة" class="w-full p-2 rounded border dark:bg-slate-700 dark:border-slate-600">
-            <textarea id="noteContentInput" placeholder="المحتوى..." class="w-full p-2 rounded border dark:bg-slate-700 dark:border-slate-600 h-20"></textarea>
-            <button onclick="addNote()" class="w-full bg-primaryDark text-white py-2 rounded font-bold">إضافة</button>
-        </div>
-        <div id="notesList" class="flex-1 overflow-y-auto p-4 space-y-2 text-right"></div>
-    </div>
-
-    <div id="authSection" class="min-h-screen flex items-center justify-center px-4">
-        <div class="bg-white dark:bg-slate-800 p-8 rounded-2xl shadow-xl w-full max-w-md">
-            <h1 class="text-4xl font-bold text-center text-primaryDark dark:text-primary mb-6">WP 2026</h1>
-            <div class="space-y-4">
-                <input type="email" id="emailInput" placeholder="البريد الإلكتروني" class="w-full px-4 py-3 rounded-xl border dark:bg-slate-700 dark:border-slate-600 outline-none">
-                <input type="password" id="passInput" placeholder="كلمة المرور" class="w-full px-4 py-3 rounded-xl border dark:bg-slate-700 dark:border-slate-600 outline-none">
-                <button onclick="handleLogin()" class="w-full bg-primaryDark text-white py-3 rounded-xl font-bold">دخول</button>
-                <button onclick="handleRegister()" class="w-full border-2 border-primaryDark text-primaryDark py-3 rounded-xl font-bold">إنشاء حساب</button>
-            </div>
-        </div>
-    </div>
-
-    <div id="mainApp" class="hidden-section text-right">
-        <nav class="bg-white dark:bg-slate-800 shadow-md sticky top-0 z-40 mb-6 border-b dark:border-slate-700">
-            <div class="container mx-auto px-4 flex justify-between items-center h-16">
-                <span class="text-2xl font-bold text-primaryDark dark:text-primary">WP 2026</span>
-                <div class="flex gap-2">
-                    <button onclick="switchTab('goals')" id="tab-goals" class="px-3 py-2 rounded-lg text-sm font-bold bg-slate-100 dark:bg-slate-700">السنة</button>
-                    <button onclick="switchTab('monthly')" id="tab-monthly" class="px-3 py-2 rounded-lg text-sm font-bold bg-slate-100 dark:bg-slate-700">الشهور</button>
-                    <button onclick="switchTab('weekly')" id="tab-weekly" class="px-3 py-2 rounded-lg text-sm font-bold bg-slate-100 dark:bg-slate-700">الأسابيع</button>
-                    <button onclick="toggleNotes()" class="px-3 py-2 rounded-lg text-sm font-bold bg-yellow-100 text-yellow-700">📝</button>
-                    <button onclick="logout()" class="px-3 py-2 rounded-lg text-sm font-bold bg-red-100 text-red-600">خروج</button>
+            
+            <div class="nav-left">
+                <div class="app-brand">
+                    <span class="app-name">WP 2026</span> 
+                    <div id="theme-icon-btn" class="theme-icon-container" onclick="toggleTheme()">
+                        <i id="theme-icon" class="fa-solid fa-moon"></i>
+                    </div>
                 </div>
+                <button onclick="logout()" class="logout-link" title="تسجيل الخروج">
+                    <i class="fa-solid fa-right-from-bracket"></i>
+                </button>
             </div>
         </nav>
 
-        <div class="container mx-auto px-4 pb-10 max-w-5xl">
-            <div class="mb-6 text-center">
-                <h2 id="sectionTitle" class="text-3xl font-bold text-primaryDark dark:text-primary mb-2"></h2>
-                <div class="max-w-md mx-auto bg-slate-200 dark:bg-slate-700 rounded-full h-4 mb-2 overflow-hidden shadow-inner">
-                    <div id="progressFill" class="bg-primaryDark h-full transition-all duration-500" style="width: 0%"></div>
-                </div>
-                <p class="text-sm font-bold text-slate-500">تم إنجاز <span id="progressText">0%</span></p>
+        <div id="notes-sidebar" class="sidebar">
+            <div class="sidebar-header">
+                <button class="close-btn" onclick="toggleNotes()">×</button>
+                <h3>الملاحظات الشخصية</h3>
             </div>
             
-            <div class="max-w-xl mx-auto flex flex-col md:flex-row gap-2 mb-10">
-                <input type="text" id="taskInput" placeholder="اكتب المهمة هنا..." class="flex-1 bg-white dark:bg-slate-800 border rounded-xl px-4 py-3 outline-none focus:ring-2 focus:ring-primary shadow-sm">
-                <select id="taskPriority" class="bg-white dark:bg-slate-800 border rounded-xl px-2 py-3 text-sm outline-none">
-                    <option value="low">عادي (أخضر)</option>
-                    <option value="medium">متوسط (أصفر)</option>
-                    <option value="high">عاجل (أحمر)</option>
-                </select>
-                <button onclick="addTask()" class="bg-primaryDark text-white rounded-xl px-8 py-3 font-bold shadow-lg hover:bg-teal-700 transition">إضافة</button>
+            <div class="note-inputs">
+                <input type="text" id="note-title" placeholder="عنوان الملاحظة">
+                <textarea id="note-body" placeholder="المحتوى..."></textarea>
+                <button class="add-note-btn" onclick="addNote()">إضافة</button>
+            </div>
+            
+            <hr style="border: 0.5px solid var(--border-color); margin: 10px 20px;">
+            
+            <div style="padding: 0 20px;">
+                <input type="text" id="search-notes" placeholder="بحث في العناوين..." oninput="filterNotes()" 
+                       style="width: 100%; padding: 8px; border-radius: 5px; background: var(--input-bg); color: var(--text-color); border: 1px solid var(--border-color);">
             </div>
 
-            <div id="selectionBar" class="mb-8 overflow-x-auto flex justify-center gap-2 p-2"></div>
+            <div id="notes-list" class="notes-display-area"></div>
+        </div>
 
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-                <div class="bg-white dark:bg-slate-800 rounded-2xl p-5 shadow-lg border-t-4 border-red-400">
-                    <h3 class="font-bold mb-4 flex justify-between items-center text-lg">🛑 للقيام <span id="count-todo" class="text-xs bg-red-100 text-red-600 px-2 py-1 rounded-full">0</span></h3>
-                    <div id="col-todo" class="column-drop-zone space-y-3" ondragover="allowDrop(event)" ondragleave="clearStyle(event)" ondrop="handleDrop(event, 'todo')"></div>
+        <div class="container main-content">
+            <header>
+                <h1 id="view-title">الأهداف الأسبوعية</h1>
+                <div class="progress-section" id="progress-area">
+                    <div class="progress-bar-container">
+                        <div id="main-progress" class="progress-bar"></div>
+                    </div>
+                    <p id="progress-text">تم إنجاز 0%</p>
                 </div>
-                <div class="bg-white dark:bg-slate-800 rounded-2xl p-5 shadow-lg border-t-4 border-yellow-400">
-                    <h3 class="font-bold mb-4 flex justify-between items-center text-lg">🚧 جاري العمل <span id="count-doing" class="text-xs bg-yellow-100 text-yellow-600 px-2 py-1 rounded-full">0</span></h3>
-                    <div id="col-doing" class="column-drop-zone space-y-3" ondragover="allowDrop(event)" ondragleave="clearStyle(event)" ondrop="handleDrop(event, 'doing')"></div>
+            </header>
+
+            <section class="add-task-area">
+                <div class="input-group">
+                    <input type="text" id="task-input" placeholder="اكتب المهمة هنا...">
+                    <select id="task-importance">
+                        <option value="urgent">عاجلة (أحمر)</option>
+                        <option value="medium">متوسطة (أصفر)</option>
+                        <option value="normal">عادية (أخضر)</option>
+                    </select>
+                    <select id="task-recursion">
+                        <option value="none">مرة واحدة</option>
+                        <option value="daily">يومياً</option>
+                        <option value="weekly">أسبوعياً</option>
+                    </select>
+                    <button onclick="addNewTask()" class="add-btn">إضافة</button>
                 </div>
-                <div class="bg-white dark:bg-slate-800 rounded-2xl p-5 shadow-lg border-t-4 border-green-400">
-                    <h3 class="font-bold mb-4 flex justify-between items-center text-lg">✅ منجز <span id="count-done" class="text-xs bg-green-100 text-green-600 px-2 py-1 rounded-full">0</span></h3>
-                    <div id="col-done" class="column-drop-zone space-y-3" ondragover="allowDrop(event)" ondragleave="clearStyle(event)" ondrop="handleDrop(event, 'done')"></div>
+            </section>
+
+            <nav class="sub-nav" id="sub-nav"></nav>
+
+            <main class="columns-container">
+                <div class="column todo-col">
+                    <div class="col-header"><h3>للقيام 🔴</h3><span class="count" id="count-todo">0</span></div>
+                    <ul id="list-todo" class="task-list" ondrop="drop(event)" ondragover="allowDrop(event)" ondragleave="dragLeave(event)"></ul>
                 </div>
-            </div>
+                <div class="column doing-col">
+                    <div class="col-header"><h3>جاري العمل 🚧</h3><span class="count" id="count-doing">0</span></div>
+                    <ul id="list-doing" class="task-list" ondrop="drop(event)" ondragover="allowDrop(event)" ondragleave="dragLeave(event)"></ul>
+                </div>
+                <div class="column done-col">
+                    <div class="col-header"><h3>منجز ✅</h3><span class="count" id="count-done">0</span></div>
+                    <ul id="list-done" class="task-list" ondrop="drop(event)" ondragover="allowDrop(event)" ondragleave="dragLeave(event)"></ul>
+                </div>
+            </main>
         </div>
     </div>
 
     <script>
-        let currentUser = JSON.parse(localStorage.getItem('wp_logged_in')) || null;
-        let currentTab = 'goals';
-        let selectedSubKey = '2026';
-        let activeEditNoteId = null;
+// === 1. إعداد قاعدة البيانات ===
+let db;
+const dbName = "WPPlannerDB_2026";
+const request = indexedDB.open(dbName, 3);
 
-        const sectionTitles = { goals: "أهداف السنة الرئيسية", monthly: "أهداف الشهر", weekly: "الأهداف الأسبوعية" };
+request.onupgradeneeded = (e) => {
+    db = e.target.result;
+    if (!db.objectStoreNames.contains("tasks")) {
+        db.createObjectStore("tasks", { keyPath: "id" });
+    }
+    if (!db.objectStoreNames.contains("notes")) {
+        db.createObjectStore("notes", { keyPath: "id" });
+    }
+    if (!db.objectStoreNames.contains("users")) {
+        const userStore = db.createObjectStore("users", { keyPath: "email" });
+        userStore.createIndex("name", "name", { unique: true });
+    }
+};
 
-        function toggleTheme() {
-            const isDark = document.documentElement.classList.toggle('dark');
-            localStorage.theme = isDark ? 'dark' : 'light';
-            document.getElementById('themeIcon').innerText = isDark ? '☀️' : '🌙';
-        }
+request.onsuccess = (e) => {
+    db = e.target.result;
+    checkLoginStatus();
+};
 
-        function toggleNotes() { document.getElementById('notesSidebar').classList.toggle('sidebar-open'); }
+request.onerror = (e) => {
+    console.error("خطأ في فتح قاعدة البيانات:", e);
+};
 
-        function addNote() {
-            const title = document.getElementById('noteTitleInput').value.trim();
-            const content = document.getElementById('noteContentInput').value.trim();
-            if(!title || !content) return;
-            if(!currentUser.notes) currentUser.notes = [];
-            currentUser.notes.unshift({ id: 'n'+Date.now(), title, content });
-            document.getElementById('noteTitleInput').value = '';
-            document.getElementById('noteContentInput').value = '';
-            saveData(); renderNotes();
-        }
+// === 2. نظام المصادقة ===
+function checkLoginStatus() {
+    const user = localStorage.getItem('currentUser');
+    if (user) {
+        document.getElementById('auth-container').style.display = 'none';
+        document.getElementById('app-wrapper').style.display = 'block';
+        const userData = JSON.parse(user);
+        showWelcomeScreen(userData.name);
+    }
+}
 
-        function renderNotes() {
-            const container = document.getElementById('notesList');
-            container.innerHTML = '';
-            (currentUser?.notes || []).forEach(n => {
-                const div = document.createElement('div');
-                div.className = 'bg-slate-100 dark:bg-slate-700 p-3 rounded-lg border-r-4 border-primaryDark cursor-pointer group shadow-sm';
-                div.onclick = () => {
-                    activeEditNoteId = n.id;
-                    document.getElementById('editNoteTitle').value = n.title;
-                    document.getElementById('editNoteContent').value = n.content;
-                    document.getElementById('noteModalOverlay').classList.remove('hidden');
-                };
-                div.innerHTML = `<div class="flex justify-between font-bold text-sm"><span>${n.title}</span><button onclick="event.stopPropagation(); deleteNote('${n.id}')" class="text-red-400 opacity-0 group-hover:opacity-100">✕</button></div>`;
-                container.appendChild(div);
-            });
-        }
+function showWelcomeScreen(userName) {
+    const welcomeScreen = document.getElementById('welcome-screen');
+    const userNameEl = document.getElementById('welcome-user-name');
+    
+    userNameEl.textContent = userName;
+    welcomeScreen.style.display = 'flex';
+    
+    // بعد 3 ثواني تختفي تلقائياً (اختياري)
+    // setTimeout(() => {
+    //     closeWelcomeScreen();
+    // }, 3000);
+}
 
-        function closeNoteModal() { document.getElementById('noteModalOverlay').classList.add('hidden'); }
-        function saveNoteEdit() {
-            const note = currentUser.notes.find(n => n.id === activeEditNoteId);
-            if(note) {
-                note.title = document.getElementById('editNoteTitle').value;
-                note.content = document.getElementById('editNoteContent').value;
-                saveData(); renderNotes(); closeNoteModal();
+function closeWelcomeScreen() {
+    const welcomeScreen = document.getElementById('welcome-screen');
+    welcomeScreen.classList.add('fade-out');
+    
+    setTimeout(() => {
+        welcomeScreen.style.display = 'none';
+        welcomeScreen.classList.remove('fade-out');
+        initApp();
+    }, 500);
+}
+
+function showSignup() {
+    document.getElementById('login-box').style.display = 'none';
+    document.getElementById('signup-box').style.display = 'block';
+}
+
+function showLogin() {
+    document.getElementById('signup-box').style.display = 'none';
+    document.getElementById('login-box').style.display = 'block';
+}
+
+function signup() {
+    const name = document.getElementById('signup-name').value.trim();
+    const email = document.getElementById('signup-email').value.trim();
+    const password = document.getElementById('signup-password').value;
+    const confirm = document.getElementById('signup-confirm').value;
+
+    if (!name || !email || !password) {
+        alert("يرجى ملء كافة الخانات");
+        return;
+    }
+    if (password !== confirm) {
+        alert("كلمات المرور غير متطابقة");
+        return;
+    }
+
+    const transaction = db.transaction(["users"], "readwrite");
+    const store = transaction.objectStore("users");
+    const newUser = { name, email, password, xp: 0 };
+    
+    const addRequest = store.add(newUser);
+    addRequest.onsuccess = () => {
+        alert("تم إنشاء الحساب بنجاح!");
+        showLogin();
+    };
+    addRequest.onerror = () => {
+        alert("هذا البريد أو الاسم مسجل مسبقاً");
+    };
+}
+
+function login() {
+    const identifier = document.getElementById('login-identifier').value.trim();
+    const password = document.getElementById('login-password').value;
+
+    if (!identifier || !password) {
+        alert("يرجى إدخال البيانات");
+        return;
+    }
+
+    const store = db.transaction("users").objectStore("users");
+    let userFound = false;
+
+    store.openCursor().onsuccess = (e) => {
+        const cursor = e.target.result;
+        if (cursor) {
+            const user = cursor.value;
+            if ((user.email === identifier || user.name === identifier) && user.password === password) {
+                userFound = true;
+                localStorage.setItem('currentUser', JSON.stringify(user));
+                document.getElementById('auth-container').style.display = 'none';
+                document.getElementById('app-wrapper').style.display = 'block';
+                showWelcomeScreen(user.name);
+                return;
             }
+            cursor.continue();
+        } else if (!userFound) {
+            alert("خطأ في البيانات المدخلة");
         }
-        function deleteNote(id) {
-            currentUser.notes = currentUser.notes.filter(n => n.id !== id);
-            saveData(); renderNotes();
+    };
+}
+
+function logout() {
+    if (confirm("هل تريد تسجيل الخروج؟")) {
+        localStorage.removeItem('currentUser');
+        location.reload();
+    }
+}
+
+// === 3. إدارة المهام ===
+let appState = { 
+    view: 'week', 
+    currentSub: ''
+};
+
+const subData = {
+    week: ['السبت', 'الأحد', 'الاثنين', 'الثلاثاء', 'الأربعاء', 'الخميس', 'الجمعة'],
+    month: ['يناير', 'فبراير', 'مارس', 'أبريل', 'مايو', 'يونيو', 'يوليو', 'أغسطس', 'سبتمبر', 'أكتوبر', 'نوفمبر', 'ديسمبر'],
+    year: ['2026']
+};
+
+function getTodayName() {
+    const days = ['الأحد', 'الاثنين', 'الثلاثاء', 'الأربعاء', 'الخميس', 'الجمعة', 'السبت'];
+    return days[new Date().getDay()];
+}
+
+function switchView(viewType) {
+    appState.view = viewType;
+    
+    document.querySelectorAll('.nav-btn').forEach(btn => {
+        btn.classList.remove('active');
+    });
+    
+    event.target.classList.add('active');
+
+    const titles = {
+        week: 'الأهداف الأسبوعية',
+        month: 'أهداف الشهور',
+        year: 'أهداف السنة'
+    };
+    
+    document.getElementById('view-title').innerText = titles[viewType];
+    document.getElementById('progress-area').style.display = viewType === 'year' ? 'none' : 'block';
+
+    renderSubNav();
+    const defaultSub = viewType === 'week' ? getTodayName() : subData[viewType][0];
+    switchSub(defaultSub);
+}
+
+function renderSubNav() {
+    const nav = document.getElementById('sub-nav');
+    nav.innerHTML = '';
+    
+    if (appState.view === 'year') return;
+
+    subData[appState.view].forEach(item => {
+        const btn = document.createElement('button');
+        btn.className = 'sub-tab';
+        btn.innerText = item;
+        btn.onclick = () => switchSub(item);
+        if (item === appState.currentSub) {
+            btn.classList.add('active');
         }
+        nav.appendChild(btn);
+    });
+}
 
-        function switchTab(tab) {
-            currentTab = tab;
-            selectedSubKey = tab === 'goals' ? '2026' : (tab === 'monthly' ? 'يناير' : 'السبت');
-            document.getElementById('sectionTitle').innerText = sectionTitles[tab];
-            renderSelectionBar();
-            renderBoard();
-            updateTabUI();
-        }
+function switchSub(item) {
+    appState.currentSub = item;
+    renderSubNav();
+    renderTasksFromDB();
+}
 
-        function updateTabUI() {
-            document.querySelectorAll('nav button').forEach(b => b.classList.remove('active-tab'));
-            document.getElementById('tab-' + currentTab)?.classList.add('active-tab');
-        }
+function addNewTask() {
+    const input = document.getElementById('task-input');
+    const text = input.value.trim();
+    
+    if (!text) {
+        alert("اكتب المهمة أولاً");
+        return;
+    }
 
-        function renderSelectionBar() {
-            const bar = document.getElementById('selectionBar');
-            bar.innerHTML = '';
-            if(currentTab !== 'goals') {
-                const list = currentTab === 'monthly' ? ['يناير','فبراير','مارس','أبريل','مايو','يونيو','يوليو','أغسطس','سبتمبر','أكتوبر','نوفمبر','ديسمبر'] : ['السبت','الأحد','الاثنين','الثلاثاء','الأربعاء','الخميس','الجمعة'];
-                list.forEach(item => {
-                    const btn = document.createElement('button');
-                    btn.innerText = item;
-                    btn.className = `px-4 py-1.5 rounded-full text-xs font-bold transition ${selectedSubKey === item ? 'bg-primaryDark text-white shadow-md' : 'bg-slate-200 dark:bg-slate-700'}`;
-                    btn.onclick = () => { selectedSubKey = item; renderSelectionBar(); renderBoard(); };
-                    bar.appendChild(btn);
-                });
-            }
-        }
+    const importance = document.getElementById('task-importance').value;
+    const recursion = document.getElementById('task-recursion').value;
+    const user = JSON.parse(localStorage.getItem('currentUser'));
 
-        function addTask() {
-            const val = document.getElementById('taskInput').value.trim();
-            const priority = document.getElementById('taskPriority').value;
-            if(!val) return;
-            if(!currentUser.tasks) currentUser.tasks = {};
-            if(!currentUser.tasks[currentTab]) currentUser.tasks[currentTab] = {};
-            if(!currentUser.tasks[currentTab][selectedSubKey]) currentUser.tasks[currentTab][selectedSubKey] = [];
-            
-            currentUser.tasks[currentTab][selectedSubKey].push({ id: 't'+Date.now(), text: val, status: 'todo', priority: priority });
-            document.getElementById('taskInput').value = '';
-            saveData();
-        }
+    const newTask = {
+        id: Date.now(),
+        text,
+        importance,
+        status: 'todo',
+        recursion,
+        view: appState.view,
+        sub: appState.currentSub,
+        userEmail: user.email,
+        lastCreated: new Date().toLocaleDateString()
+    };
 
-        function calculateProgress(tasks) {
-            if (tasks.length === 0) return 0;
-            const doneCount = tasks.filter(t => t.status === 'done').length;
-            return Math.round((doneCount / tasks.length) * 100);
-        }
+    const transaction = db.transaction(["tasks"], "readwrite");
+    transaction.objectStore("tasks").add(newTask);
+    
+    transaction.oncomplete = () => {
+        input.value = '';
+        renderTasksFromDB();
+    };
+}
 
-        function renderBoard() {
-            const cols = { todo: document.getElementById('col-todo'), doing: document.getElementById('col-doing'), done: document.getElementById('col-done') };
-            Object.values(cols).forEach(c => c.innerHTML = '');
-            const tasks = currentUser.tasks?.[currentTab]?.[selectedSubKey] || [];
-            
-            // تحديث النسبة المئوية
-            const progress = calculateProgress(tasks);
-            document.getElementById('progressFill').style.width = progress + '%';
-            document.getElementById('progressText').innerText = progress + '%';
+function deleteTaskFromDB(id) {
+    if (!confirm("هل تريد حذف هذه المهمة؟")) return;
+    
+    const transaction = db.transaction(["tasks"], "readwrite");
+    transaction.objectStore("tasks").delete(id);
+    transaction.oncomplete = () => renderTasksFromDB();
+}
 
-            let counts = {todo:0, doing:0, done:0};
-            tasks.forEach(t => {
-                counts[t.status]++;
-                const d = document.createElement('div');
-                d.id = t.id; d.draggable = true;
-                d.className = `bg-white dark:bg-slate-700 p-4 rounded-xl shadow border dark:border-slate-600 flex justify-between items-center group cursor-grab priority-${t.priority}`;
+function renderTasksFromDB() {
+    const lists = {
+        todo: document.getElementById('list-todo'),
+        doing: document.getElementById('list-doing'),
+        done: document.getElementById('list-done')
+    };
+    
+    Object.values(lists).forEach(list => {
+        if (list) list.innerHTML = '';
+    });
+    
+    const user = JSON.parse(localStorage.getItem('currentUser'));
+    const counts = { todo: 0, doing: 0, done: 0 };
+
+    const store = db.transaction("tasks").objectStore("tasks");
+    
+    store.openCursor().onsuccess = (e) => {
+        const cursor = e.target.result;
+        if (cursor) {
+            const task = cursor.value;
+            if (task.view === appState.view && 
+                task.sub === appState.currentSub && 
+                task.userEmail === user.email) {
                 
-                // إضافة الدائرة الملونة
-                d.innerHTML = `
-                    <div class="flex items-center gap-3">
-                        <div class="w-3 h-3 rounded-full dot-${t.priority} shadow-sm"></div>
-                        <span class="text-sm font-bold ${t.status === 'done' ? 'line-through text-slate-400' : ''}">${t.text}</span>
+                const li = document.createElement('li');
+                li.className = 'task-item';
+                li.id = task.id;
+                li.draggable = true;
+                
+                li.ondragstart = (e) => {
+                    e.dataTransfer.setData("text", e.target.id);
+                    e.target.classList.add('dragging');
+                };
+                
+                li.ondragend = (e) => {
+                    e.target.classList.remove('dragging');
+                };
+                
+                li.innerHTML = `
+                    <div style="display:flex; align-items:center; gap:10px;">
+                        <span class="importance-dot dot-${task.importance}"></span>
+                        <span>${task.text} ${task.recursion === 'daily' ? '🔄' : ''}</span>
                     </div>
-                    <button onclick="deleteTask('${t.id}')" class="text-red-400 opacity-0 group-hover:opacity-100 transition px-2">✕</button>
+                    <button onclick="deleteTaskFromDB(${task.id})" 
+                            style="background:none; border:none; color:#ff7675; cursor:pointer; font-size:1.5rem; line-height:1;">×</button>
                 `;
                 
-                d.ondragstart = (e) => { e.dataTransfer.setData("text", e.target.id); e.target.style.opacity = "0.5"; };
-                d.ondragend = (e) => e.target.style.opacity = "1";
-                cols[t.status].appendChild(d);
-            });
-            Object.keys(counts).forEach(k => document.getElementById('count-'+k).innerText = counts[k]);
-        }
-
-        window.allowDrop = (e) => { e.preventDefault(); e.currentTarget.classList.add('drag-over'); }
-        window.clearStyle = (e) => e.currentTarget.classList.remove('drag-over');
-        window.handleDrop = (e, status) => {
-            e.preventDefault(); e.currentTarget.classList.remove('drag-over');
-            const id = e.dataTransfer.getData("text");
-            const tasks = currentUser.tasks[currentTab][selectedSubKey];
-            const t = tasks.find(x => x.id === id);
-            if(t) { t.status = status; saveData(); }
-        }
-
-        function deleteTask(id) {
-            currentUser.tasks[currentTab][selectedSubKey] = currentUser.tasks[currentTab][selectedSubKey].filter(t => t.id !== id);
-            saveData();
-        }
-
-        function saveData() {
-            localStorage.setItem('wp_logged_in', JSON.stringify(currentUser));
-            let users = JSON.parse(localStorage.getItem('wp_users')) || [];
-            let idx = users.findIndex(u => u.email === currentUser.email);
-            if(idx !== -1) { users[idx] = currentUser; localStorage.setItem('wp_users', JSON.stringify(users)); }
-            renderBoard();
-        }
-
-        function handleLogin() {
-            const e = document.getElementById('emailInput').value;
-            const p = document.getElementById('passInput').value;
-            const u = (JSON.parse(localStorage.getItem('wp_users')) || []).find(x => x.email === e && x.pass === p);
-            if(u) { currentUser = u; localStorage.setItem('wp_logged_in', JSON.stringify(u)); checkAuth(); }
-        }
-
-        function handleRegister() {
-            const e = document.getElementById('emailInput').value;
-            const p = document.getElementById('passInput').value;
-            if(!e || !p) return;
-            let users = JSON.parse(localStorage.getItem('wp_users')) || [];
-            if(users.find(x => x.email === e)) return alert("المستخدم موجود");
-            users.push({email:e, pass:p, tasks:{}, notes:[]});
-            localStorage.setItem('wp_users', JSON.stringify(users));
-            alert("تم التسجيل!");
-        }
-
-        function checkAuth() {
-            if(currentUser) {
-                document.getElementById('authSection').classList.add('hidden-section');
-                document.getElementById('mainApp').classList.remove('hidden-section');
-                switchTab('goals');
-                renderNotes();
+                lists[task.status].appendChild(li);
+                counts[task.status]++;
             }
+            cursor.continue();
+        } else {
+            updateCounts(counts);
+            updateProgress(counts);
         }
+    };
+}
 
-        function logout() { localStorage.removeItem('wp_logged_in'); location.reload(); }
-        if(localStorage.theme === 'dark') document.documentElement.classList.add('dark');
-        checkAuth();
+function updateCounts(counts) {
+    document.getElementById('count-todo').innerText = counts.todo;
+    document.getElementById('count-doing').innerText = counts.doing;
+    document.getElementById('count-done').innerText = counts.done;
+}
+
+function updateProgress(counts) {
+    const total = counts.todo + counts.doing + counts.done;
+    const percentage = total > 0 ? Math.round((counts.done / total) * 100) : 0;
+    
+    document.getElementById('main-progress').style.width = percentage + '%';
+    document.getElementById('progress-text').innerText = `تم إنجاز ${percentage}%`;
+}
+
+// === 4. السحب والإفلات ===
+function allowDrop(e) {
+    e.preventDefault();
+    e.currentTarget.classList.add('drag-over');
+}
+
+function dragLeave(e) {
+    e.currentTarget.classList.remove('drag-over');
+}
+
+function drop(e) {
+    e.preventDefault();
+    e.currentTarget.classList.remove('drag-over');
+    
+    const id = parseInt(e.dataTransfer.getData("text"));
+    const newStatus = e.currentTarget.id.replace('list-', '');
+    
+    const transaction = db.transaction(["tasks"], "readwrite");
+    const store = transaction.objectStore("tasks");
+    
+    store.get(id).onsuccess = (event) => {
+        const task = event.target.result;
+        if (task) {
+            task.status = newStatus;
+            store.put(task);
+        }
+    };
+    
+    transaction.oncomplete = () => renderTasksFromDB();
+}
+
+// === 5. إدارة الملاحظات ===
+function toggleNotes() {
+    const sidebar = document.getElementById('notes-sidebar');
+    sidebar.classList.toggle('active');
+}
+
+function addNote() {
+    const titleEl = document.getElementById('note-title');
+    const bodyEl = document.getElementById('note-body');
+    const user = JSON.parse(localStorage.getItem('currentUser'));
+
+    if (!titleEl.value.trim() || !bodyEl.value.trim()) {
+        alert("أكمل بيانات الملاحظة");
+        return;
+    }
+
+    const newNote = {
+        id: Date.now(),
+        title: titleEl.value.trim(),
+        body: bodyEl.value.trim(),
+        userEmail: user.email
+    };
+
+    const transaction = db.transaction(["notes"], "readwrite");
+    transaction.objectStore("notes").add(newNote);
+    
+    transaction.oncomplete = () => {
+        titleEl.value = '';
+        bodyEl.value = '';
+        renderNotesFromDB();
+    };
+}
+
+function renderNotesFromDB(filter = "") {
+    const area = document.getElementById('notes-list');
+    area.innerHTML = '';
+    
+    const user = JSON.parse(localStorage.getItem('currentUser'));
+    const store = db.transaction("notes").objectStore("notes");
+    
+    store.openCursor().onsuccess = (e) => {
+        const cursor = e.target.result;
+        if (cursor) {
+            const note = cursor.value;
+            if (note.userEmail === user.email && 
+                note.title.toLowerCase().includes(filter.toLowerCase())) {
+                
+                const div = document.createElement('div');
+                div.className = 'note-card';
+                div.innerHTML = `
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
+                        <h4 style="margin:0; color:var(--primary-teal);">${note.title}</h4>
+                        <button onclick="deleteNoteFromDB(${note.id})" 
+                                style="color:#ff7675; cursor:pointer; background:none; border:none; font-size:1.5rem; line-height:1;">×</button>
+                    </div>
+                    <p style="white-space: pre-wrap; font-size:0.9rem; opacity:0.85; margin:0;">${note.body}</p>
+                `;
+                area.appendChild(div);
+            }
+            cursor.continue();
+        }
+    };
+}
+
+function deleteNoteFromDB(id) {
+    if (!confirm("هل تريد حذف هذه الملاحظة؟")) return;
+    
+    const transaction = db.transaction(["notes"], "readwrite");
+    transaction.objectStore("notes").delete(id);
+    transaction.oncomplete = () => renderNotesFromDB();
+}
+
+function filterNotes() {
+    const searchValue = document.getElementById('search-notes').value;
+    renderNotesFromDB(searchValue);
+}
+
+// === 6. المؤقت ===
+let timerInterval;
+let isRunning = false;
+let timeLeft = 25 * 60;
+
+function toggleTimer() {
+    const btn = document.getElementById('timer-btn');
+    const container = document.getElementById('pomodoro');
+    
+    if (isRunning) {
+        clearInterval(timerInterval);
+        isRunning = false;
+        btn.innerHTML = '<i class="fa-solid fa-play"></i>';
+        container.classList.remove('timer-running');
+    } else {
+        isRunning = true;
+        btn.innerHTML = '<i class="fa-solid fa-pause"></i>';
+        container.classList.add('timer-running');
+        
+        timerInterval = setInterval(() => {
+            timeLeft--;
+            updateTimerDisplay();
+            
+            if (timeLeft <= 0) {
+                clearInterval(timerInterval);
+                isRunning = false;
+                alert("انتهى وقت التركيز! أحسنت 🎉");
+                resetTimer();
+            }
+        }, 1000);
+    }
+}
+
+function updateTimerDisplay() {
+    const minutes = Math.floor(timeLeft / 60);
+    const seconds = timeLeft % 60;
+    document.getElementById('timer-minutes').textContent = minutes.toString().padStart(2, '0');
+    document.getElementById('timer-seconds').textContent = seconds.toString().padStart(2, '0');
+}
+
+function resetTimer() {
+    clearInterval(timerInterval);
+    timeLeft = 25 * 60;
+    isRunning = false;
+    updateTimerDisplay();
+    document.getElementById('timer-btn').innerHTML = '<i class="fa-solid fa-play"></i>';
+    document.getElementById('pomodoro').classList.remove('timer-running');
+}
+
+// === 7. الثيم ===
+function toggleTheme() {
+    const currentTheme = document.documentElement.getAttribute('data-theme');
+    const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+    
+    document.documentElement.setAttribute('data-theme', newTheme);
+    localStorage.setItem('theme', newTheme);
+    updateThemeIcon(newTheme);
+}
+
+function updateThemeIcon(theme) {
+    const icon = document.getElementById('theme-icon');
+    if (theme === 'dark') {
+        icon.className = 'fa-solid fa-moon';
+    } else {
+        icon.className = 'fa-solid fa-sun';
+    }
+}
+
+// === 8. التهيئة ===
+function initApp() {
+    const savedTheme = localStorage.getItem('theme') || 'dark';
+    document.documentElement.setAttribute('data-theme', savedTheme);
+    updateThemeIcon(savedTheme);
+    
+    updateTimerDisplay();
+    renderNotesFromDB();
+    switchView('week');
+}
     </script>
 </body>
 </html>
