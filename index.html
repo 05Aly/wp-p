@@ -767,7 +767,7 @@ input:focus, select:focus {
                 <input type="password" id="login-password" placeholder="كلمة المرور">
             </div>
             <button onclick="login()" class="auth-btn">دخول</button>
-            <p>ليس لديك حساب؟ <a href="#" onclick="showSignup(); return false;">إنشاء حساب جديد</a></p>
+            <p>ليس لديك حساب؟ <a href="javascript:void(0);" onclick="showSignup()">إنشاء حساب جديد</a></p>
         </div>
 
         <div class="auth-box" id="signup-box" style="display: none;">
@@ -779,7 +779,7 @@ input:focus, select:focus {
                 <input type="password" id="signup-confirm" placeholder="تأكيد كلمة المرور">
             </div>
             <button onclick="signup()" class="auth-btn">تسجيل</button>
-            <p>لديك حساب بالفعل؟ <a href="#" onclick="showLogin(); return false;">تسجيل الدخول</a></p>
+            <p>لديك حساب بالفعل؟ <a href="javascript:void(0);" onclick="showLogin()">تسجيل الدخول</a></p>
         </div>
     </div>
 
@@ -893,531 +893,523 @@ input:focus, select:focus {
         </div>
     </div>
 
-    <script>
-// === اتصال Supabase ===
-const SUPABASE_URL = 'https://vpazkdotoxabplvfukoq.supabase.co';
-const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZwYXprZG90b3hhYnBsdmZ1a29xIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njg0MjkwOTIsImV4cCI6MjA4NDAwNTA5Mn0.3x8TVlW8kkPr9Qg0gF5Pq4V3qeszubSt2VmJi7wKzZ4';
-const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
-
-// === متغيرات التطبيق ===
-let appState = { 
-    view: 'week', 
-    currentSub: ''
-};
-
-const subData = {
-    week: ['السبت', 'الأحد', 'الاثنين', 'الثلاثاء', 'الأربعاء', 'الخميس', 'الجمعة'],
-    month: ['يناير', 'فبراير', 'مارس', 'أبريل', 'مايو', 'يونيو', 'يوليو', 'أغسطس', 'سبتمبر', 'أكتوبر', 'نوفمبر', 'ديسمبر'],
-    year: ['2026']
-};
-
-// === التحقق من حالة تسجيل الدخول ===
-async function checkLoginStatus() {
-    const user = localStorage.getItem('currentUser');
-    if (user) {
-        document.getElementById('auth-container').style.display = 'none';
-        document.getElementById('app-wrapper').style.display = 'block';
-        const userData = JSON.parse(user);
-        showWelcomeScreen(userData.name);
-    }
-}
-
-function showWelcomeScreen(userName) {
-    const welcomeScreen = document.getElementById('welcome-screen');
-    const userNameEl = document.getElementById('welcome-user-name');
-    
-    userNameEl.textContent = userName;
-    welcomeScreen.style.display = 'flex';
-}
-
-function closeWelcomeScreen() {
-    const welcomeScreen = document.getElementById('welcome-screen');
-    welcomeScreen.classList.add('fade-out');
-    
-    setTimeout(() => {
-        welcomeScreen.style.display = 'none';
-        welcomeScreen.classList.remove('fade-out');
-        initApp();
-    }, 500);
-}
-
-function showSignup() {
-    document.getElementById('login-box').style.display = 'none';
-    document.getElementById('signup-box').style.display = 'block';
-}
-
-function showLogin() {
-    document.getElementById('signup-box').style.display = 'none';
-    document.getElementById('login-box').style.display = 'block';
-}
-
-// === التسجيل ===
-async function signup() {
-    const name = document.getElementById('signup-name').value.trim();
-    const email = document.getElementById('signup-email').value.trim();
-    const password = document.getElementById('signup-password').value;
-    const confirm = document.getElementById('signup-confirm').value;
-
-    if (!name || !email || !password) {
-        alert("يرجى ملء كافة الخانات");
-        return;
-    }
-    if (password !== confirm) {
-        alert("كلمات المرور غير متطابقة");
-        return;
-    }
-
-    try {
-        const { data, error } = await supabase
-            .from('users')
-            .insert([{ name, email, password, xp: 0 }])
-            .select();
-
-        if (error) {
-            alert("هذا البريد أو الاسم مسجل مسبقاً");
-            return;
-        }
-
-        alert("تم إنشاء الحساب بنجاح!");
-        showLogin();
-    } catch (err) {
-        console.error(err);
-        alert("حدث خطأ أثناء التسجيل");
-    }
-}
-
-// === تسجيل الدخول ===
-async function login() {
-    const identifier = document.getElementById('login-identifier').value.trim();
-    const password = document.getElementById('login-password').value;
-
-    if (!identifier || !password) {
-        alert("يرجى إدخال البيانات");
-        return;
-    }
-
-    try {
-        const { data, error } = await supabase
-            .from('users')
-            .select('*')
-            .or(`email.eq.${identifier},name.eq.${identifier}`)
-            .eq('password', password)
-            .single();
-
-        if (error || !data) {
-            alert("خطأ في البيانات المدخلة");
-            return;
-        }
-
-        localStorage.setItem('currentUser', JSON.stringify(data));
-        document.getElementById('auth-container').style.display = 'none';
-        document.getElementById('app-wrapper').style.display = 'block';
-        showWelcomeScreen(data.name);
-    } catch (err) {
-        console.error(err);
-        alert("حدث خطأ أثناء تسجيل الدخول");
-    }
-}
-
-// === تسجيل الخروج ===
-function logout() {
-    if (confirm("هل تريد تسجيل الخروج؟")) {
-        localStorage.removeItem('currentUser');
-        location.reload();
-    }
-}
-
-// === إدارة المهام ===
-function getTodayName() {
-    const days = ['الأحد', 'الاثنين', 'الثلاثاء', 'الأربعاء', 'الخميس', 'الجمعة', 'السبت'];
-    return days[new Date().getDay()];
-}
-
-function switchView(viewType) {
-    appState.view = viewType;
-    
-    document.querySelectorAll('.nav-btn').forEach(btn => {
-        btn.classList.remove('active');
-    });
-    
-    event.target.classList.add('active');
-
-    const titles = {
-        week: 'الأهداف الأسبوعية',
-        month: 'أهداف الشهور',
-        year: 'أهداف السنة'
-    };
-    
-    document.getElementById('view-title').innerText = titles[viewType];
-    document.getElementById('progress-area').style.display = viewType === 'year' ? 'none' : 'block';
-
-    renderSubNav();
-    const defaultSub = viewType === 'week' ? getTodayName() : subData[viewType][0];
-    switchSub(defaultSub);
-}
-
-function renderSubNav() {
-    const nav = document.getElementById('sub-nav');
-    nav.innerHTML = '';
-    
-    if (appState.view === 'year') return;
-
-    subData[appState.view].forEach(item => {
-        const btn = document.createElement('button');
-        btn.className = 'sub-tab';
-        btn.innerText = item;
-        btn.onclick = () => switchSub(item);
-        if (item === appState.currentSub) {
-            btn.classList.add('active');
-        }
-        nav.appendChild(btn);
-    });
-}
-
-function switchSub(item) {
-    appState.currentSub = item;
-    renderSubNav();
-    renderTasksFromDB();
-}
-
-// === إضافة مهمة جديدة ===
-async function addNewTask() {
-    const input = document.getElementById('task-input');
-    const text = input.value.trim();
-    
-    if (!text) {
-        alert("اكتب المهمة أولاً");
-        return;
-    }
-
-    const importance = document.getElementById('task-importance').value;
-    const recursion = document.getElementById('task-recursion').value;
-    const user = JSON.parse(localStorage.getItem('currentUser'));
-
-    const newTask = {
-        id: Date.now(),
-        text,
-        importance,
-        status: 'todo',
-        recursion,
-        view: appState.view,
-        sub: appState.currentSub,
-        user_email: user.email,
-        last_created: new Date().toLocaleDateString()
-    };
-
-    try {
-        const { error } = await supabase
-            .from('tasks')
-            .insert([newTask]);
-
-        if (error) throw error;
-
-        input.value = '';
-        renderTasksFromDB();
-    } catch (err) {
-        console.error(err);
-        alert("حدث خطأ أثناء إضافة المهمة");
-    }
-}
-
-// === حذف مهمة ===
-async function deleteTaskFromDB(id) {
-    if (!confirm("هل تريد حذف هذه المهمة؟")) return;
-    
-    try {
-        const { error } = await supabase
-            .from('tasks')
-            .delete()
-            .eq('id', id);
-
-        if (error) throw error;
-        renderTasksFromDB();
-    } catch (err) {
-        console.error(err);
-        alert("حدث خطأ أثناء حذف المهمة");
-    }
-}
-
-// === عرض المهام ===
-async function renderTasksFromDB() {
-    const lists = {
-        todo: document.getElementById('list-todo'),
-        doing: document.getElementById('list-doing'),
-        done: document.getElementById('list-done')
-    };
-    
-    Object.values(lists).forEach(list => {
-        if (list) list.innerHTML = '';
-    });
-    
-    const user = JSON.parse(localStorage.getItem('currentUser'));
-    const counts = { todo: 0, doing: 0, done: 0 };
-
-    try {
-        const { data, error } = await supabase
-            .from('tasks')
-            .select('*')
-            .eq('user_email', user.email)
-            .eq('view', appState.view)
-            .eq('sub', appState.currentSub);
-
-        if (error) throw error;
-
-        data.forEach(task => {
-            const li = document.createElement('li');
-            li.className = 'task-item';
-            li.id = task.id;
-            li.draggable = true;
-            
-            li.ondragstart = (e) => {
-                e.dataTransfer.setData("text", e.target.id);
-                e.target.classList.add('dragging');
-            };
-            
-            li.ondragend = (e) => {
-                e.target.classList.remove('dragging');
-            };
-            
-            li.innerHTML = `
-                <div style="display:flex; align-items:center; gap:10px;">
-                    <span class="importance-dot dot-${task.importance}"></span>
-                    <span>${task.text} ${task.recursion === 'daily' ? '🔄' : ''}</span>
-                </div>
-                <button onclick="deleteTaskFromDB(${task.id})" 
-                        style="background:none; border:none; color:#ff7675; cursor:pointer; font-size:1.5rem; line-height:1;">×</button>
-            `;
-            
-            lists[task.status].appendChild(li);
-            counts[task.status]++;
-        });
-
-        updateCounts(counts);
-        updateProgress(counts);
-    } catch (err) {
-        console.error(err);
-    }
-}
-
-function updateCounts(counts) {
-    document.getElementById('count-todo').innerText = counts.todo;
-    document.getElementById('count-doing').innerText = counts.doing;
-    document.getElementById('count-done').innerText = counts.done;
-}
-
-function updateProgress(counts) {
-    const total = counts.todo + counts.doing + counts.done;
-    const percentage = total > 0 ? Math.round((counts.done / total) * 100) : 0;
-    
-    document.getElementById('main-progress').style.width = percentage + '%';
-    document.getElementById('progress-text').innerText = `تم إنجاز ${percentage}%`;
-}
-
-// === السحب والإفلات ===
-function allowDrop(e) {
-    e.preventDefault();
-    e.currentTarget.classList.add('drag-over');
-}
-
-function dragLeave(e) {
-    e.currentTarget.classList.remove('drag-over');
-}
-
-async function drop(e) {
-    e.preventDefault();
-    e.currentTarget.classList.remove('drag-over');
-    
-    const id = parseInt(e.dataTransfer.getData("text"));
-    const newStatus = e.currentTarget.id.replace('list-', '');
-    
-    try {
-        const { error } = await supabase
-            .from('tasks')
-            .update({ status: newStatus })
-            .eq('id', id);
-
-        if (error) throw error;
-        renderTasksFromDB();
-    } catch (err) {
-        console.error(err);
-    }
-}
-
-// === إدارة الملاحظات ===
-function toggleNotes() {
-    const sidebar = document.getElementById('notes-sidebar');
-    sidebar.classList.toggle('active');
-}
-
-async function addNote() {
-    const titleEl = document.getElementById('note-title');
-    const bodyEl = document.getElementById('note-body');
-    const user = JSON.parse(localStorage.getItem('currentUser'));
-
-    if (!titleEl.value.trim() || !bodyEl.value.trim()) {
-        alert("أكمل بيانات الملاحظة");
-        return;
-    }
-
-    const newNote = {
-        id: Date.now(),
-        title: titleEl.value.trim(),
-        body: bodyEl.value.trim(),
-        user_email: user.email
-    };
-
-    try {
-        const { error } = await supabase
-            .from('notes')
-            .insert([newNote]);
-
-        if (error) throw error;
-
-        titleEl.value = '';
-        bodyEl.value = '';
-        renderNotesFromDB();
-    } catch (err) {
-        console.error(err);
-        alert("حدث خطأ أثناء إضافة الملاحظة");
-    }
-}
-
-async function renderNotesFromDB(filter = "") {
-    const area = document.getElementById('notes-list');
-    area.innerHTML = '';
-    
-    const user = JSON.parse(localStorage.getItem('currentUser'));
-    
-    try {
-        const { data, error } = await supabase
-            .from('notes')
-            .select('*')
-            .eq('user_email', user.email)
-            .ilike('title', `%${filter}%`);
-
-        if (error) throw error;
-
-        data.forEach(note => {
-            const div = document.createElement('div');
-            div.className = 'note-card';
-            div.innerHTML = `
-                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
-                    <h4 style="margin:0; color:var(--primary-teal);">${note.title}</h4>
-                    <button onclick="deleteNoteFromDB(${note.id})" 
-                            style="color:#ff7675; cursor:pointer; background:none; border:none; font-size:1.5rem; line-height:1;">×</button>
-                </div>
-                <p style="white-space: pre-wrap; font-size:0.9rem; opacity:0.85; margin:0;">${note.body}</p>
-            `;
-            area.appendChild(div);
-        });
-    } catch (err) {
-        console.error(err);
-    }
-}
-
-async function deleteNoteFromDB(id) {
-    if (!confirm("هل تريد حذف هذه الملاحظة؟")) return;
-    
-    try {
-        const { error } = await supabase
-            .from('notes')
-            .delete()
-            .eq('id', id);
-
-        if (error) throw error;
-        renderNotesFromDB();
-    } catch (err) {
-        console.error(err);
-        alert("حدث خطأ أثناء حذف الملاحظة");
-    }
-}
-
-function filterNotes() {
-    const searchValue = document.getElementById('search-notes').value;
-    renderNotesFromDB(searchValue);
-}
-
-// === المؤقت ===
-let timerInterval;
-let isRunning = false;
-let timeLeft = 25 * 60;
-
-function toggleTimer() {
-    const btn = document.getElementById('timer-btn');
-    const container = document.getElementById('pomodoro');
-    
-    if (isRunning) {
-        clearInterval(timerInterval);
-        isRunning = false;
-        btn.innerHTML = '<i class="fa-solid fa-play"></i>';
-        container.classList.remove('timer-running');
-    } else {
-        isRunning = true;
-        btn.innerHTML = '<i class="fa-solid fa-pause"></i>';
-        container.classList.add('timer-running');
-        
-        timerInterval = setInterval(() => {
-            timeLeft--;
-            updateTimerDisplay();
-            
-            if (timeLeft <= 0) {
-                clearInterval(timerInterval);
-                isRunning = false;
-                alert("انتهى وقت التركيز! أحسنت 🎉");
-                resetTimer();
-            }
-        }, 1000);
-    }
-}
-
-function updateTimerDisplay() {
-    const minutes = Math.floor(timeLeft / 60);
-    const seconds = timeLeft % 60;
-    document.getElementById('timer-minutes').textContent = minutes.toString().padStart(2, '0');
-    document.getElementById('timer-seconds').textContent = seconds.toString().padStart(2, '0');
-}
-
-function resetTimer() {
-    clearInterval(timerInterval);
-    timeLeft = 25 * 60;
-    isRunning = false;
-    updateTimerDisplay();
-    document.getElementById('timer-btn').innerHTML = '<i class="fa-solid fa-play"></i>';
-    document.getElementById('pomodoro').classList.remove('timer-running');
-}
-
-// === الثيم ===
-function toggleTheme() {
-    const currentTheme = document.documentElement.getAttribute('data-theme');
-    const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
-    
-    document.documentElement.setAttribute('data-theme', newTheme);
-    localStorage.setItem('theme', newTheme);
-    updateThemeIcon(newTheme);
-}
-
-function updateThemeIcon(theme) {
-    const icon = document.getElementById('theme-icon');
-    if (theme === 'dark') {
-        icon.className = 'fa-solid fa-moon';
-    } else {
-        icon.className = 'fa-solid fa-sun';
-    }
-}
-
-// === التهيئة ===
-function initApp() {
-    const savedTheme = localStorage.getItem('theme') || 'dark';
-    document.documentElement.setAttribute('data-theme', savedTheme);
-    updateThemeIcon(savedTheme);
-    
-    updateTimerDisplay();
-    renderNotesFromDB();
-    switchView('week');
-}
-
+  <script>
 // بدء التطبيق
-checkLoginStatus();
-    </script>
+(function() {
+    // === اتصال Supabase ===
+    const SUPABASE_URL = 'https://vpazkdotoxabplvfukoq.supabase.co';
+    const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZwYXprZG90b3hhYnBsdmZ1a29xIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njg0MjkwOTIsImV4cCI6MjA4NDAwNTA5Mn0.3x8TVlW8kkPr9Qg0gF5Pq4V3qeszubSt2VmJi7wKzZ4';
+    window.supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+    // === متغيرات التطبيق ===
+    window.appState = { 
+        view: 'week', 
+        currentSub: ''
+    };
+
+    const subData = {
+        week: ['السبت', 'الأحد', 'الاثنين', 'الثلاثاء', 'الأربعاء', 'الخميس', 'الجمعة'],
+        month: ['يناير', 'فبراير', 'مارس', 'أبريل', 'مايو', 'يونيو', 'يوليو', 'أغسطس', 'سبتمبر', 'أكتوبر', 'نوفمبر', 'ديسمبر'],
+        year: ['2026']
+    };
+
+    // === وظائف المصادقة ===
+    window.showSignup = function() {
+        document.getElementById('login-box').style.display = 'none';
+        document.getElementById('signup-box').style.display = 'block';
+    };
+
+    window.showLogin = function() {
+        document.getElementById('signup-box').style.display = 'none';
+        document.getElementById('login-box').style.display = 'block';
+    };
+
+    window.signup = async function() {
+        const name = document.getElementById('signup-name').value.trim();
+        const email = document.getElementById('signup-email').value.trim();
+        const password = document.getElementById('signup-password').value;
+        const confirm = document.getElementById('signup-confirm').value;
+
+        if (!name || !email || !password) {
+            alert("يرجى ملء كافة الخانات");
+            return;
+        }
+        if (password !== confirm) {
+            alert("كلمات المرور غير متطابقة");
+            return;
+        }
+
+        try {
+            const { data, error } = await window.supabase
+                .from('users')
+                .insert([{ name, email, password, xp: 0 }])
+                .select();
+
+            if (error) {
+                alert("هذا البريد أو الاسم مسجل مسبقاً");
+                return;
+            }
+
+            alert("تم إنشاء الحساب بنجاح!");
+            window.showLogin();
+        } catch (err) {
+            console.error(err);
+            alert("حدث خطأ أثناء التسجيل");
+        }
+    };
+
+    window.login = async function() {
+        const identifier = document.getElementById('login-identifier').value.trim();
+        const password = document.getElementById('login-password').value;
+
+        if (!identifier || !password) {
+            alert("يرجى إدخال البيانات");
+            return;
+        }
+
+        try {
+            const { data, error } = await window.supabase
+                .from('users')
+                .select('*')
+                .or(`email.eq.${identifier},name.eq.${identifier}`)
+                .eq('password', password)
+                .single();
+
+            if (error || !data) {
+                alert("خطأ في البيانات المدخلة");
+                return;
+            }
+
+            localStorage.setItem('currentUser', JSON.stringify(data));
+            document.getElementById('auth-container').style.display = 'none';
+            document.getElementById('app-wrapper').style.display = 'block';
+            showWelcomeScreen(data.name);
+        } catch (err) {
+            console.error(err);
+            alert("حدث خطأ أثناء تسجيل الدخول");
+        }
+    };
+
+    window.logout = function() {
+        if (confirm("هل تريد تسجيل الخروج؟")) {
+            localStorage.removeItem('currentUser');
+            location.reload();
+        }
+    };
+
+    // === باقي الوظائف ===
+    function showWelcomeScreen(userName) {
+        const welcomeScreen = document.getElementById('welcome-screen');
+        const userNameEl = document.getElementById('welcome-user-name');
+        
+        userNameEl.textContent = userName;
+        welcomeScreen.style.display = 'flex';
+    }
+
+    window.closeWelcomeScreen = function() {
+        const welcomeScreen = document.getElementById('welcome-screen');
+        welcomeScreen.classList.add('fade-out');
+        
+        setTimeout(() => {
+            welcomeScreen.style.display = 'none';
+            welcomeScreen.classList.remove('fade-out');
+            initApp();
+        }, 500);
+    };
+
+    function getTodayName() {
+        const days = ['الأحد', 'الاثنين', 'الثلاثاء', 'الأربعاء', 'الخميس', 'الجمعة', 'السبت'];
+        return days[new Date().getDay()];
+    }
+
+    window.switchView = function(viewType) {
+        window.appState.view = viewType;
+        
+        document.querySelectorAll('.nav-btn').forEach(btn => {
+            btn.classList.remove('active');
+        });
+        
+        event.target.classList.add('active');
+
+        const titles = {
+            week: 'الأهداف الأسبوعية',
+            month: 'أهداف الشهور',
+            year: 'أهداف السنة'
+        };
+        
+        document.getElementById('view-title').innerText = titles[viewType];
+        document.getElementById('progress-area').style.display = viewType === 'year' ? 'none' : 'block';
+
+        renderSubNav();
+        const defaultSub = viewType === 'week' ? getTodayName() : subData[viewType][0];
+        switchSub(defaultSub);
+    };
+
+    function renderSubNav() {
+        const nav = document.getElementById('sub-nav');
+        nav.innerHTML = '';
+        
+        if (window.appState.view === 'year') return;
+
+        subData[window.appState.view].forEach(item => {
+            const btn = document.createElement('button');
+            btn.className = 'sub-tab';
+            btn.innerText = item;
+            btn.onclick = () => switchSub(item);
+            if (item === window.appState.currentSub) {
+                btn.classList.add('active');
+            }
+            nav.appendChild(btn);
+        });
+    }
+
+    function switchSub(item) {
+        window.appState.currentSub = item;
+        renderSubNav();
+        renderTasksFromDB();
+    }
+
+    window.addNewTask = async function() {
+        const input = document.getElementById('task-input');
+        const text = input.value.trim();
+        
+        if (!text) {
+            alert("اكتب المهمة أولاً");
+            return;
+        }
+
+        const importance = document.getElementById('task-importance').value;
+        const recursion = document.getElementById('task-recursion').value;
+        const user = JSON.parse(localStorage.getItem('currentUser'));
+
+        const newTask = {
+            id: Date.now(),
+            text,
+            importance,
+            status: 'todo',
+            recursion,
+            view: window.appState.view,
+            sub: window.appState.currentSub,
+            user_email: user.email,
+            last_created: new Date().toLocaleDateString()
+        };
+
+        try {
+            const { error } = await window.supabase
+                .from('tasks')
+                .insert([newTask]);
+
+            if (error) throw error;
+
+            input.value = '';
+            renderTasksFromDB();
+        } catch (err) {
+            console.error(err);
+            alert("حدث خطأ أثناء إضافة المهمة");
+        }
+    };
+
+    window.deleteTaskFromDB = async function(id) {
+        if (!confirm("هل تريد حذف هذه المهمة؟")) return;
+        
+        try {
+            const { error } = await window.supabase
+                .from('tasks')
+                .delete()
+                .eq('id', id);
+
+            if (error) throw error;
+            renderTasksFromDB();
+        } catch (err) {
+            console.error(err);
+            alert("حدث خطأ أثناء حذف المهمة");
+        }
+    };
+
+    async function renderTasksFromDB() {
+        const lists = {
+            todo: document.getElementById('list-todo'),
+            doing: document.getElementById('list-doing'),
+            done: document.getElementById('list-done')
+        };
+        
+        Object.values(lists).forEach(list => {
+            if (list) list.innerHTML = '';
+        });
+        
+        const user = JSON.parse(localStorage.getItem('currentUser'));
+        const counts = { todo: 0, doing: 0, done: 0 };
+
+        try {
+            const { data, error } = await window.supabase
+                .from('tasks')
+                .select('*')
+                .eq('user_email', user.email)
+                .eq('view', window.appState.view)
+                .eq('sub', window.appState.currentSub);
+
+            if (error) throw error;
+
+            data.forEach(task => {
+                const li = document.createElement('li');
+                li.className = 'task-item';
+                li.id = task.id;
+                li.draggable = true;
+                
+                li.ondragstart = (e) => {
+                    e.dataTransfer.setData("text", e.target.id);
+                    e.target.classList.add('dragging');
+                };
+                
+                li.ondragend = (e) => {
+                    e.target.classList.remove('dragging');
+                };
+                
+                li.innerHTML = `
+                    <div style="display:flex; align-items:center; gap:10px;">
+                        <span class="importance-dot dot-${task.importance}"></span>
+                        <span>${task.text} ${task.recursion === 'daily' ? '🔄' : ''}</span>
+                    </div>
+                    <button onclick="deleteTaskFromDB(${task.id})" 
+                            style="background:none; border:none; color:#ff7675; cursor:pointer; font-size:1.5rem; line-height:1;">×</button>
+                `;
+                
+                lists[task.status].appendChild(li);
+                counts[task.status]++;
+            });
+
+            updateCounts(counts);
+            updateProgress(counts);
+        } catch (err) {
+            console.error(err);
+        }
+    }
+
+    function updateCounts(counts) {
+        document.getElementById('count-todo').innerText = counts.todo;
+        document.getElementById('count-doing').innerText = counts.doing;
+        document.getElementById('count-done').innerText = counts.done;
+    }
+
+    function updateProgress(counts) {
+        const total = counts.todo + counts.doing + counts.done;
+        const percentage = total > 0 ? Math.round((counts.done / total) * 100) : 0;
+        
+        document.getElementById('main-progress').style.width = percentage + '%';
+        document.getElementById('progress-text').innerText = `تم إنجاز ${percentage}%`;
+    }
+
+    window.allowDrop = function(e) {
+        e.preventDefault();
+        e.currentTarget.classList.add('drag-over');
+    };
+
+    window.dragLeave = function(e) {
+        e.currentTarget.classList.remove('drag-over');
+    };
+
+    window.drop = async function(e) {
+        e.preventDefault();
+        e.currentTarget.classList.remove('drag-over');
+        
+        const id = parseInt(e.dataTransfer.getData("text"));
+        const newStatus = e.currentTarget.id.replace('list-', '');
+        
+        try {
+            const { error } = await window.supabase
+                .from('tasks')
+                .update({ status: newStatus })
+                .eq('id', id);
+
+            if (error) throw error;
+            renderTasksFromDB();
+        } catch (err) {
+            console.error(err);
+        }
+    };
+
+    window.toggleNotes = function() {
+        const sidebar = document.getElementById('notes-sidebar');
+        sidebar.classList.toggle('active');
+    };
+
+    window.addNote = async function() {
+        const titleEl = document.getElementById('note-title');
+        const bodyEl = document.getElementById('note-body');
+        const user = JSON.parse(localStorage.getItem('currentUser'));
+
+        if (!titleEl.value.trim() || !bodyEl.value.trim()) {
+            alert("أكمل بيانات الملاحظة");
+            return;
+        }
+
+        const newNote = {
+            id: Date.now(),
+            title: titleEl.value.trim(),
+            body: bodyEl.value.trim(),
+            user_email: user.email
+        };
+
+        try {
+            const { error } = await window.supabase
+                .from('notes')
+                .insert([newNote]);
+
+            if (error) throw error;
+
+            titleEl.value = '';
+            bodyEl.value = '';
+            renderNotesFromDB();
+        } catch (err) {
+            console.error(err);
+            alert("حدث خطأ أثناء إضافة الملاحظة");
+        }
+    };
+
+    async function renderNotesFromDB(filter = "") {
+        const area = document.getElementById('notes-list');
+        area.innerHTML = '';
+        
+        const user = JSON.parse(localStorage.getItem('currentUser'));
+        
+        try {
+            const { data, error } = await window.supabase
+                .from('notes')
+                .select('*')
+                .eq('user_email', user.email)
+                .ilike('title', `%${filter}%`);
+
+            if (error) throw error;
+
+            data.forEach(note => {
+                const div = document.createElement('div');
+                div.className = 'note-card';
+                div.innerHTML = `
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
+                        <h4 style="margin:0; color:var(--primary-teal);">${note.title}</h4>
+                        <button onclick="deleteNoteFromDB(${note.id})" 
+                                style="color:#ff7675; cursor:pointer; background:none; border:none; font-size:1.5rem; line-height:1;">×</button>
+                    </div>
+                    <p style="white-space: pre-wrap; font-size:0.9rem; opacity:0.85; margin:0;">${note.body}</p>
+                `;
+                area.appendChild(div);
+            });
+        } catch (err) {
+            console.error(err);
+        }
+    }
+
+    window.deleteNoteFromDB = async function(id) {
+        if (!confirm("هل تريد حذف هذه الملاحظة؟")) return;
+        
+        try {
+            const { error } = await window.supabase
+                .from('notes')
+                .delete()
+                .eq('id', id);
+
+            if (error) throw error;
+            renderNotesFromDB();
+        } catch (err) {
+            console.error(err);
+            alert("حدث خطأ أثناء حذف الملاحظة");
+        }
+    };
+
+    window.filterNotes = function() {
+        const searchValue = document.getElementById('search-notes').value;
+        renderNotesFromDB(searchValue);
+    };
+
+    let timerInterval;
+    let isRunning = false;
+    let timeLeft = 25 * 60;
+
+    window.toggleTimer = function() {
+        const btn = document.getElementById('timer-btn');
+        const container = document.getElementById('pomodoro');
+        
+        if (isRunning) {
+            clearInterval(timerInterval);
+            isRunning = false;
+            btn.innerHTML = '<i class="fa-solid fa-play"></i>';
+            container.classList.remove('timer-running');
+        } else {
+            isRunning = true;
+            btn.innerHTML = '<i class="fa-solid fa-pause"></i>';
+            container.classList.add('timer-running');
+            
+            timerInterval = setInterval(() => {
+                timeLeft--;
+                updateTimerDisplay();
+                
+                if (timeLeft <= 0) {
+                    clearInterval(timerInterval);
+                    isRunning = false;
+                    alert("انتهى وقت التركيز! أحسنت 🎉");
+                    resetTimer();
+                }
+            }, 1000);
+        }
+    };
+
+    function updateTimerDisplay() {
+        const minutes = Math.floor(timeLeft / 60);
+        const seconds = timeLeft % 60;
+        document.getElementById('timer-minutes').textContent = minutes.toString().padStart(2, '0');
+        document.getElementById('timer-seconds').textContent = seconds.toString().padStart(2, '0');
+    }
+
+    function resetTimer() {
+        clearInterval(timerInterval);
+        timeLeft = 25 * 60;
+        isRunning = false;
+        updateTimerDisplay();
+        document.getElementById('timer-btn').innerHTML = '<i class="fa-solid fa-play"></i>';
+        document.getElementById('pomodoro').classList.remove('timer-running');
+    }
+
+    window.toggleTheme = function() {
+        const currentTheme = document.documentElement.getAttribute('data-theme');
+        const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+        
+        document.documentElement.setAttribute('data-theme', newTheme);
+        localStorage.setItem('theme', newTheme);
+        updateThemeIcon(newTheme);
+    };
+
+    function updateThemeIcon(theme) {
+        const icon = document.getElementById('theme-icon');
+        if (theme === 'dark') {
+            icon.className = 'fa-solid fa-moon';
+        } else {
+            icon.className = 'fa-solid fa-sun';
+        }
+    }
+
+    function initApp() {
+        const savedTheme = localStorage.getItem('theme') || 'dark';
+        document.documentElement.setAttribute('data-theme', savedTheme);
+        updateThemeIcon(savedTheme);
+        
+        updateTimerDisplay();
+        renderNotesFromDB();
+        window.switchView('week');
+    }
+
+    async function checkLoginStatus() {
+        const user = localStorage.getItem('currentUser');
+        if (user) {
+            document.getElementById('auth-container').style.display = 'none';
+            document.getElementById('app-wrapper').style.display = 'block';
+            const userData = JSON.parse(user);
+            showWelcomeScreen(userData.name);
+        }
+    }
+
+    // بدء التطبيق
+    checkLoginStatus();
+})();
+</script>
 </body>
 </html>
