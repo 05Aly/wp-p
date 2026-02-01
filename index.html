@@ -105,7 +105,7 @@ header h1 {
     justify-content: center;
 }
 
-input, select {
+input, select, textarea {
     background: var(--input-bg);
     color: var(--text-color);
     border: 1px solid var(--border-color);
@@ -117,7 +117,7 @@ input, select {
     font-size: 0.95rem;
 }
 
-input:focus, select:focus {
+input:focus, select:focus, textarea:focus {
     border-color: var(--primary-teal);
     box-shadow: 0 0 8px rgba(45, 212, 191, 0.2);
 }
@@ -545,18 +545,81 @@ input:focus, select:focus {
     flex: 1;
 }
 
+/* تعديل كرت الملاحظة ليكون عنوان فقط وقابل للضغط */
 .note-card {
     background: var(--input-bg);
-    padding: 15px;
+    padding: 12px 15px;
     border-radius: 10px;
-    margin-top: 15px;
+    margin-top: 10px;
     border-right: 4px solid var(--primary-teal);
+    cursor: pointer;
     transition: 0.3s;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
 }
 
 .note-card:hover {
-    box-shadow: 0 4px 12px rgba(45, 212, 191, 0.1);
+    background: var(--tab-inactive);
+    transform: translateX(-5px);
 }
+
+.note-card h4 {
+    margin: 0;
+    color: var(--text-color);
+    font-size: 0.95rem;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 80%;
+}
+
+/* ستايل النافذة المنبثقة (Modal) */
+.modal-overlay {
+    position: fixed;
+    top: 0; left: 0; width: 100%; height: 100%;
+    background: rgba(0, 0, 0, 0.8);
+    display: none; 
+    align-items: center;
+    justify-content: center;
+    z-index: 3000;
+    backdrop-filter: blur(4px);
+}
+
+.modal-content {
+    background: var(--card-bg);
+    width: 90%;
+    max-width: 500px;
+    border-radius: 20px;
+    padding: 25px;
+    box-shadow: 0 20px 40px rgba(0,0,0,0.4);
+    border: 1px solid var(--border-color);
+}
+
+.modal-body {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+    margin-top: 20px;
+}
+
+.modal-body textarea {
+    height: 200px;
+    resize: none;
+}
+
+.save-edit-btn {
+    background-color: var(--primary-teal);
+    color: var(--bg-dark);
+    border: none;
+    padding: 12px;
+    border-radius: 8px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: 0.3s;
+}
+
+.save-edit-btn:hover { background-color: #0d9488; }
 
 .welcome-screen {
     position: fixed;
@@ -758,6 +821,21 @@ input:focus, select:focus {
     </style>
 </head>
 <body>
+
+    <div id="note-modal" class="modal-overlay" onclick="closeNoteModal()">
+        <div class="modal-content" onclick="event.stopPropagation()">
+            <div style="display:flex; justify-content: space-between; align-items: center;">
+                <h3 style="color: var(--primary-teal)">تعديل الملاحظة</h3>
+                <button onclick="closeNoteModal()" style="background:none; border:none; color:white; font-size:1.5rem; cursor:pointer;">&times;</button>
+            </div>
+            <div class="modal-body">
+                <input type="hidden" id="edit-note-id">
+                <input type="text" id="edit-note-title" placeholder="العنوان">
+                <textarea id="edit-note-body" placeholder="المحتوى..."></textarea>
+                <button class="save-edit-btn" onclick="saveNoteEdit()">حفظ التعديلات</button>
+            </div>
+        </div>
+    </div>
 
     <div id="auth-container" class="auth-overlay">
         <div class="auth-box" id="login-box">
@@ -1022,6 +1100,12 @@ input:focus, select:focus {
         return days[new Date().getDay()];
     }
 
+    // دالة جلب اسم الشهر الحالي
+    function getCurrentMonthName() {
+        const months = ['يناير', 'فبراير', 'مارس', 'أبريل', 'مايو', 'يونيو', 'يوليو', 'أغسطس', 'سبتمبر', 'أكتوبر', 'نوفمبر', 'ديسمبر'];
+        return months[new Date().getMonth()];
+    }
+
     window.switchView = function(viewType) {
         window.appState.view = viewType;
         
@@ -1029,7 +1113,14 @@ input:focus, select:focus {
             btn.classList.remove('active');
         });
         
-        event.target.classList.add('active');
+        if (event && event.target && event.target.classList.contains('nav-btn')) {
+            event.target.classList.add('active');
+        } else {
+            const btns = document.querySelectorAll('.nav-btn');
+            btns.forEach(b => {
+                if(b.getAttribute('onclick').includes(viewType)) b.classList.add('active');
+            });
+        }
 
         const titles = {
             week: 'الأهداف الأسبوعية',
@@ -1041,7 +1132,17 @@ input:focus, select:focus {
         document.getElementById('progress-area').style.display = viewType === 'year' ? 'none' : 'block';
 
         renderSubNav();
-        const defaultSub = viewType === 'week' ? getTodayName() : subData[viewType][0];
+
+        // التعديل الرئيسي: تحديد تلقائي لليوم أو الشهر الحالي
+        let defaultSub;
+        if (viewType === 'week') {
+            defaultSub = getTodayName();
+        } else if (viewType === 'month') {
+            defaultSub = getCurrentMonthName();
+        } else {
+            defaultSub = subData[viewType][0];
+        }
+        
         switchSub(defaultSub);
     };
 
@@ -1233,6 +1334,38 @@ input:focus, select:focus {
         sidebar.classList.toggle('active');
     };
 
+    // وظائف المودال (النافذة المنبثقة) للملاحظات
+    window.openNoteModal = function(id, title, body) {
+        document.getElementById('edit-note-id').value = id;
+        document.getElementById('edit-note-title').value = title;
+        document.getElementById('edit-note-body').value = body;
+        document.getElementById('note-modal').style.display = 'flex';
+    };
+
+    window.closeNoteModal = function() {
+        document.getElementById('note-modal').style.display = 'none';
+    };
+
+    window.saveNoteEdit = async function() {
+        const id = document.getElementById('edit-note-id').value;
+        const title = document.getElementById('edit-note-title').value;
+        const body = document.getElementById('edit-note-body').value;
+
+        try {
+            const { error } = await window.supabase
+                .from('notes')
+                .update({ title: title.trim(), body: body.trim() })
+                .eq('id', id);
+
+            if (error) throw error;
+            closeNoteModal();
+            renderNotesFromDB();
+        } catch (err) {
+            console.error(err);
+            alert("حدث خطأ أثناء التعديل");
+        }
+    };
+
     window.addNote = async function() {
         const titleEl = document.getElementById('note-title');
         const bodyEl = document.getElementById('note-body');
@@ -1269,8 +1402,8 @@ input:focus, select:focus {
     async function renderNotesFromDB(filter = "") {
         const area = document.getElementById('notes-list');
         area.innerHTML = '';
-        
         const user = JSON.parse(localStorage.getItem('currentUser'));
+        if(!user) return;
         
         try {
             const { data, error } = await window.supabase
@@ -1284,13 +1417,13 @@ input:focus, select:focus {
             data.forEach(note => {
                 const div = document.createElement('div');
                 div.className = 'note-card';
+                // عند الضغط يفتح المودال للتعديل
+                div.onclick = () => openNoteModal(note.id, note.title, note.body);
+                
                 div.innerHTML = `
-                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
-                        <h4 style="margin:0; color:var(--primary-teal);">${note.title}</h4>
-                        <button onclick="deleteNoteFromDB(${note.id})" 
-                                style="color:#ff7675; cursor:pointer; background:none; border:none; font-size:1.5rem; line-height:1;">×</button>
-                    </div>
-                    <p style="white-space: pre-wrap; font-size:0.9rem; opacity:0.85; margin:0;">${note.body}</p>
+                    <h4>${note.title}</h4>
+                    <button onclick="event.stopPropagation(); deleteNoteFromDB(${note.id})" 
+                            style="color:#ff7675; cursor:pointer; background:none; border:none; font-size:1.3rem; line-height:1;">&times;</button>
                 `;
                 area.appendChild(div);
             });
@@ -1407,7 +1540,6 @@ input:focus, select:focus {
         }
     }
 
-    // بدء التطبيق
     checkLoginStatus();
 })();
 </script>
