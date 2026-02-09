@@ -197,7 +197,7 @@ input:focus, select:focus, textarea:focus {
     font-weight: bold;
 }
 
-.notes-word {
+.notes-word, .bucket-btn {
     background: none;
     border: 1px solid var(--primary-teal);
     color: var(--primary-teal);
@@ -208,7 +208,7 @@ input:focus, select:focus, textarea:focus {
     transition: 0.3s ease;
 }
 
-.notes-word:hover {
+.notes-word:hover, .bucket-btn:hover {
     background: var(--primary-teal);
     color: var(--bg-dark);
 }
@@ -547,7 +547,6 @@ input:focus, select:focus, textarea:focus {
     flex: 1;
 }
 
-/* تعديل كرت الملاحظة ليكون عنوان فقط وقابل للضغط */
 .note-card {
     background: var(--input-bg);
     padding: 12px 15px;
@@ -576,7 +575,6 @@ input:focus, select:focus, textarea:focus {
     max-width: 80%;
 }
 
-/* ستايل النافذة المنبثقة (Modal) */
 .modal-overlay {
     position: fixed;
     top: 0; left: 0; width: 100%; height: 100%;
@@ -622,6 +620,291 @@ input:focus, select:focus, textarea:focus {
 }
 
 .save-edit-btn:hover { background-color: #0d9488; }
+
+/* ============= Bucket Styles ============= */
+.bucket-page {
+    display: none;
+    padding-top: 80px;
+}
+
+.bucket-page.active {
+    display: block;
+}
+
+.bucket-header {
+    text-align: center;
+    margin-bottom: 40px;
+}
+
+.bucket-header h1 {
+    color: var(--primary-teal);
+    font-size: 2.5rem;
+    margin-bottom: 15px;
+}
+
+.bucket-controls {
+    display: flex;
+    justify-content: center;
+    gap: 15px;
+    margin-bottom: 30px;
+    flex-wrap: wrap;
+}
+
+.upload-btn {
+    background: var(--primary-teal);
+    color: var(--bg-dark);
+    padding: 12px 30px;
+    border-radius: 10px;
+    border: none;
+    font-weight: bold;
+    cursor: pointer;
+    transition: 0.3s;
+    font-size: 1rem;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.upload-btn:hover {
+    background: #0d9488;
+    transform: translateY(-2px);
+}
+
+#bucket-search {
+    min-width: 300px;
+    padding: 12px 20px;
+    border-radius: 10px;
+    background: var(--input-bg);
+    border: 1px solid var(--border-color);
+    color: var(--text-color);
+}
+
+.bucket-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 25px;
+    padding: 20px;
+}
+
+.bucket-item {
+    background: var(--card-bg);
+    border-radius: 15px;
+    overflow: hidden;
+    border: 1px solid var(--border-color);
+    transition: 0.3s;
+    animation: fadeIn 0.3s ease;
+}
+
+.bucket-item:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 25px rgba(45, 212, 191, 0.2);
+    border-color: var(--primary-teal);
+}
+
+.bucket-preview {
+    width: 100%;
+    height: 200px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--input-bg);
+    overflow: hidden;
+    position: relative;
+}
+
+.bucket-preview img,
+.bucket-preview video {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.bucket-preview .file-icon {
+    font-size: 4rem;
+    color: var(--primary-teal);
+}
+
+.bucket-info {
+    padding: 15px;
+}
+
+.bucket-title {
+    font-weight: bold;
+    margin-bottom: 5px;
+    color: var(--primary-teal);
+    font-size: 1.1rem;
+}
+
+.bucket-filename {
+    font-size: 0.85rem;
+    margin-bottom: 8px;
+    color: var(--tab-text);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.bucket-meta {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 0.85rem;
+    color: var(--tab-text);
+    margin-bottom: 12px;
+}
+
+.bucket-actions {
+    display: flex;
+    gap: 10px;
+}
+
+.bucket-action-btn {
+    flex: 1;
+    padding: 8px;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    font-weight: bold;
+    transition: 0.3s;
+    font-size: 0.9rem;
+}
+
+.view-btn {
+    background: var(--primary-teal);
+    color: var(--bg-dark);
+}
+
+.view-btn:hover {
+    background: #0d9488;
+}
+
+.delete-btn {
+    background: var(--accent-red);
+    color: white;
+}
+
+.delete-btn:hover {
+    background: #dc2626;
+}
+
+.edit-btn {
+    background: var(--accent-yellow);
+    color: var(--bg-dark);
+}
+
+.edit-btn:hover {
+    background: #d97706;
+}
+
+.empty-bucket {
+    text-align: center;
+    padding: 60px 20px;
+    color: var(--tab-text);
+}
+
+.empty-bucket i {
+    font-size: 5rem;
+    margin-bottom: 20px;
+    opacity: 0.3;
+}
+
+.empty-bucket p {
+    font-size: 1.2rem;
+}
+
+/* Modal للعرض */
+.view-modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.95);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    z-index: 4000;
+}
+
+.view-modal.active {
+    display: flex;
+}
+
+.view-modal-content {
+    max-width: 90%;
+    max-height: 90%;
+    position: relative;
+}
+
+.view-modal-content img,
+.view-modal-content video {
+    max-width: 100%;
+    max-height: 90vh;
+    border-radius: 10px;
+}
+
+.close-view-modal {
+    position: absolute;
+    top: -40px;
+    right: 0;
+    background: var(--accent-red);
+    color: white;
+    border: none;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    cursor: pointer;
+    font-size: 1.5rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: 0.3s;
+}
+
+.close-view-modal:hover {
+    background: #dc2626;
+    transform: scale(1.1);
+}
+
+.upload-progress {
+    margin-top: 15px;
+    padding: 15px;
+    background: var(--card-bg);
+    border-radius: 10px;
+    border: 1px solid var(--border-color);
+}
+
+.progress-item {
+    margin-bottom: 10px;
+    padding: 10px;
+    background: var(--input-bg);
+    border-radius: 8px;
+    font-size: 0.9rem;
+}
+
+.progress-item.success {
+    border-right: 3px solid var(--accent-green);
+}
+
+.progress-item.error {
+    border-right: 3px solid var(--accent-red);
+}
+
+.progress-bar-upload {
+    width: 100%;
+    height: 8px;
+    background: var(--tab-inactive);
+    border-radius: 10px;
+    overflow: hidden;
+    margin-top: 10px;
+}
+
+.progress-bar-fill {
+    height: 100%;
+    background: var(--primary-teal);
+    width: 0%;
+    transition: width 0.3s;
+}
 
 .welcome-screen {
     position: fixed;
@@ -819,11 +1102,16 @@ input:focus, select:focus, textarea:focus {
     .columns-container {
         grid-template-columns: 1fr;
     }
+    
+    .bucket-grid {
+        grid-template-columns: 1fr;
+    }
 }
     </style>
 </head>
 <body>
 
+    <!-- Modal للملاحظات -->
     <div id="note-modal" class="modal-overlay" onclick="closeNoteModal()">
         <div class="modal-content" onclick="event.stopPropagation()">
             <div style="display:flex; justify-content: space-between; align-items: center;">
@@ -839,6 +1127,53 @@ input:focus, select:focus, textarea:focus {
         </div>
     </div>
 
+    <!-- Modal للعرض -->
+    <div id="view-modal" class="view-modal">
+        <div class="view-modal-content">
+            <button class="close-view-modal" onclick="closeViewModal()">&times;</button>
+            <div id="view-content"></div>
+        </div>
+    </div>
+
+    <!-- Modal لرفع الملفات -->
+    <div id="upload-modal" class="modal-overlay" onclick="closeUploadModal()">
+        <div class="modal-content" onclick="event.stopPropagation()">
+            <div style="display:flex; justify-content: space-between; align-items: center;">
+                <h3 style="color: var(--primary-teal)">رفع ملف جديد</h3>
+                <button onclick="closeUploadModal()" style="background:none; border:none; color:white; font-size:1.5rem; cursor:pointer;">&times;</button>
+            </div>
+            <div class="modal-body">
+                <input type="text" id="upload-file-title" placeholder="اسم الملف (للبحث والعرض)">
+                <input type="file" id="upload-file-input" accept="*/*" style="padding: 12px; background: var(--input-bg); border: 1px solid var(--border-color); border-radius: 8px; color: var(--text-color);">
+                <button class="save-edit-btn" onclick="confirmUpload()">رفع الملف</button>
+                <div id="upload-progress" class="upload-progress" style="display: none;">
+                    <div class="progress-item">
+                        <span id="progress-text">جاري رفع الملف...</span>
+                        <div class="progress-bar-upload">
+                            <div id="progress-bar-fill" class="progress-bar-fill"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal لتعديل الملف -->
+    <div id="edit-file-modal" class="modal-overlay" onclick="closeEditFileModal()">
+        <div class="modal-content" onclick="event.stopPropagation()">
+            <div style="display:flex; justify-content: space-between; align-items: center;">
+                <h3 style="color: var(--primary-teal)">تعديل الملف</h3>
+                <button onclick="closeEditFileModal()" style="background:none; border:none; color:white; font-size:1.5rem; cursor:pointer;">&times;</button>
+            </div>
+            <div class="modal-body">
+                <input type="hidden" id="edit-file-id">
+                <input type="text" id="edit-file-title" placeholder="اسم الملف">
+                <button class="save-edit-btn" onclick="saveFileEdit()">حفظ التعديلات</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- شاشة تسجيل الدخول -->
     <div id="auth-container" class="auth-overlay">
         <div class="auth-box" id="login-box">
             <h2>تسجيل الدخول</h2>
@@ -865,6 +1200,7 @@ input:focus, select:focus, textarea:focus {
 
     <div id="app-wrapper" style="display: none;">
         
+        <!-- شاشة الترحيب -->
         <div id="welcome-screen" class="welcome-screen" style="display: none;">
             <div class="welcome-content">
                 <h2>مرحباً</h2>
@@ -874,12 +1210,16 @@ input:focus, select:focus, textarea:focus {
             </div>
         </div>
         
+        <!-- شريط التنقل -->
         <nav class="main-nav" id="navbar">
             <div class="nav-right">
                 <button class="nav-btn active" onclick="switchView('week')">الأسابيع</button>
                 <button class="nav-btn" onclick="switchView('month')">الشهور</button>
                 <button class="nav-btn" onclick="switchView('year')">السنة</button>
                 <button class="notes-word" onclick="toggleNotes()">ملاحظات</button>
+                <button class="bucket-btn" onclick="showBucketPage()">
+                    <i class="fa-solid fa-folder"></i> Bucket
+                </button>
 
                 <div class="pomodoro-container" id="pomodoro">
                     <div class="timer-display">
@@ -904,6 +1244,7 @@ input:focus, select:focus, textarea:focus {
             </div>
         </nav>
 
+        <!-- Sidebar الملاحظات -->
         <div id="notes-sidebar" class="sidebar">
             <div class="sidebar-header">
                 <button class="close-btn" onclick="toggleNotes()">×</button>
@@ -926,7 +1267,8 @@ input:focus, select:focus, textarea:focus {
             <div id="notes-list" class="notes-display-area"></div>
         </div>
 
-        <div class="container main-content">
+        <!-- صفحة المهام الرئيسية -->
+        <div id="tasks-page" class="container main-content">
             <header>
                 <h1 id="view-title">الأهداف الأسبوعية</h1>
                 <div class="progress-section" id="progress-area">
@@ -971,6 +1313,30 @@ input:focus, select:focus, textarea:focus {
                 </div>
             </main>
         </div>
+
+        <!-- صفحة Bucket -->
+        <div id="bucket-page" class="bucket-page container">
+            <div class="bucket-header">
+                <h1><i class="fa-solid fa-folder-open"></i> مساحة التخزين</h1>
+                <p style="color: var(--tab-text);">رفع وإدارة الملفات والصور والفيديوهات (بدون حد أقصى للحجم)</p>
+            </div>
+
+            <div class="bucket-controls">
+                <button class="upload-btn" onclick="openUploadModal()">
+                    <i class="fa-solid fa-upload"></i>
+                    رفع ملف جديد
+                </button>
+                <input type="text" id="bucket-search" placeholder="🔍 البحث في الملفات..." oninput="filterBucketFiles()">
+            </div>
+
+            <div id="bucket-grid" class="bucket-grid"></div>
+            
+            <div id="empty-bucket" class="empty-bucket" style="display: none;">
+                <i class="fa-solid fa-folder-open"></i>
+                <p>لا توجد ملفات حالياً</p>
+                <p style="font-size: 0.9rem; margin-top: 10px;">ابدأ برفع ملفاتك الأولى!</p>
+            </div>
+        </div>
     </div>
 
   <script>
@@ -981,10 +1347,14 @@ input:focus, select:focus, textarea:focus {
     const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZwYXprZG90b3hhYnBsdmZ1a29xIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njg0MjkwOTIsImV4cCI6MjA4NDAwNTA5Mn0.3x8TVlW8kkPr9Qg0gF5Pq4V3qeszubSt2VmJi7wKzZ4';
     window.supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
+    // اسم الـ Storage Bucket (يجب إنشاؤه في Supabase)
+    const BUCKET_NAME = 'user-files';
+
     // === متغيرات التطبيق ===
     window.appState = { 
         view: 'week', 
-        currentSub: ''
+        currentSub: '',
+        currentPage: 'tasks'
     };
 
     const subData = {
@@ -1077,6 +1447,20 @@ input:focus, select:focus, textarea:focus {
         }
     };
 
+    // === وظائف الصفحات ===
+    window.showBucketPage = function() {
+        window.appState.currentPage = 'bucket';
+        document.getElementById('tasks-page').style.display = 'none';
+        document.getElementById('bucket-page').classList.add('active');
+        renderBucketFiles();
+    };
+
+    window.showTasksPage = function() {
+        window.appState.currentPage = 'tasks';
+        document.getElementById('bucket-page').classList.remove('active');
+        document.getElementById('tasks-page').style.display = 'block';
+    };
+
     // === باقي الوظائف ===
     function showWelcomeScreen(userName) {
         const welcomeScreen = document.getElementById('welcome-screen');
@@ -1102,13 +1486,13 @@ input:focus, select:focus, textarea:focus {
         return days[new Date().getDay()];
     }
 
-    // دالة جلب اسم الشهر الحالي
     function getCurrentMonthName() {
         const months = ['يناير', 'فبراير', 'مارس', 'أبريل', 'مايو', 'يونيو', 'يوليو', 'أغسطس', 'سبتمبر', 'أكتوبر', 'نوفمبر', 'ديسمبر'];
         return months[new Date().getMonth()];
     }
 
     window.switchView = function(viewType) {
+        window.showTasksPage();
         window.appState.view = viewType;
         
         document.querySelectorAll('.nav-btn').forEach(btn => {
@@ -1135,7 +1519,6 @@ input:focus, select:focus, textarea:focus {
 
         renderSubNav();
 
-        // التعديل الرئيسي: تحديد تلقائي لليوم أو الشهر الحالي
         let defaultSub;
         if (viewType === 'week') {
             defaultSub = getTodayName();
@@ -1336,7 +1719,6 @@ input:focus, select:focus, textarea:focus {
         sidebar.classList.toggle('active');
     };
 
-    // وظائف المودال (النافذة المنبثقة) للملاحظات
     window.openNoteModal = function(id, title, body) {
         document.getElementById('edit-note-id').value = id;
         document.getElementById('edit-note-title').value = title;
@@ -1419,7 +1801,6 @@ input:focus, select:focus, textarea:focus {
             data.forEach(note => {
                 const div = document.createElement('div');
                 div.className = 'note-card';
-                // عند الضغط يفتح المودال للتعديل
                 div.onclick = () => openNoteModal(note.id, note.title, note.body);
                 
                 div.innerHTML = `
@@ -1456,6 +1837,300 @@ input:focus, select:focus, textarea:focus {
         renderNotesFromDB(searchValue);
     };
 
+    // === وظائف Bucket مع Supabase Storage ===
+    window.openUploadModal = function() {
+        document.getElementById('upload-file-title').value = '';
+        document.getElementById('upload-file-input').value = '';
+        document.getElementById('upload-progress').style.display = 'none';
+        document.getElementById('upload-modal').style.display = 'flex';
+    };
+
+    window.closeUploadModal = function() {
+        document.getElementById('upload-modal').style.display = 'none';
+    };
+
+   window.confirmUpload = async function() {
+        const titleInput = document.getElementById('upload-file-title');
+        const fileInput = document.getElementById('upload-file-input');
+        const progressDiv = document.getElementById('upload-progress');
+        const progressBar = document.getElementById('progress-bar-fill');
+        const progressText = document.getElementById('progress-text');
+        
+        const title = titleInput.value.trim();
+        const file = fileInput.files[0];
+        
+        if (!title || !file) {
+            alert("يرجى إكمال البيانات واختيار ملف");
+            return;
+        }
+        
+        progressDiv.style.display = 'block';
+        progressText.textContent = 'جاري رفع الملف...';
+        progressBar.style.width = '0%';
+        
+        const user = JSON.parse(localStorage.getItem('currentUser'));
+
+        // تحسين اسم المسار ليتوافق مع صلاحيات الوصول العام إذا لم تستخدم Supabase Auth
+        const timestamp = Date.now();
+        const sanitizedFileName = file.name.replace(/[^a-zA-Z0-9.-]/g, '_');
+        // سنضع الملفات في مجلد عام لأننا نستخدم نظام login يدوي
+        const storagePath = `public/${timestamp}_${sanitizedFileName}`;
+        
+        try {
+            // 1. رفع الملف إلى Storage
+            const { data: uploadData, error: uploadError } = await window.supabase.storage
+                .from(BUCKET_NAME)
+                .upload(storagePath, file);
+            
+            if (uploadError) throw uploadError;
+            
+            progressBar.style.width = '50%';
+            progressText.textContent = 'جاري حفظ البيانات...';
+            
+            // 2. الحصول على الرابط
+            const { data: urlData } = window.supabase.storage
+                .from(BUCKET_NAME)
+                .getPublicUrl(storagePath);
+            
+            // 3. حفظ البيانات في الجدول (تأكد من إرسال الحقول المطلوبة فقط)
+            const { error: dbError } = await window.supabase
+                .from('bucket_files')
+                .insert([{
+                    title: title,
+                    filename: file.name,
+                    storage_path: storagePath,
+                    file_url: urlData.publicUrl,
+                    filetype: file.type,
+                    filesize: file.size,
+                    user_email: user.email
+                    // ملاحظة: لا نرسل user_id هنا لأننا نستخدم نظام login يدوي
+                }]);
+            
+            if (dbError) throw dbError;
+            
+            progressBar.style.width = '100%';
+            progressText.textContent = '✓ تم الرفع بنجاح!';
+            
+            setTimeout(() => {
+                closeUploadModal();
+                renderBucketFiles();
+            }, 1500);
+            
+        } catch (err) {
+            console.error('Error:', err);
+            progressText.textContent = `✗ خطأ: ${err.message}`;
+            // محاولة حذف الملف من الـ storage إذا فشل تسجيله في الداتابيز
+            await window.supabase.storage.from(BUCKET_NAME).remove([storagePath]);
+        }
+    };
+    async function renderBucketFiles(filter = "") {
+        const grid = document.getElementById('bucket-grid');
+        const emptyState = document.getElementById('empty-bucket');
+        grid.innerHTML = '';
+        
+        const user = JSON.parse(localStorage.getItem('currentUser'));
+        if (!user) return;
+        
+        try {
+            let query = window.supabase
+                .from('bucket_files')
+                .select('*')
+                .eq('user_email', user.email)
+                .order('uploaded_at', { ascending: false });
+            
+            if (filter) {
+                query = query.or(`title.ilike.%${filter}%,filename.ilike.%${filter}%`);
+            }
+            
+            const { data, error } = await query;
+            
+            if (error) throw error;
+            
+            if (data.length === 0) {
+                emptyState.style.display = 'block';
+                grid.style.display = 'none';
+                return;
+            }
+            
+            emptyState.style.display = 'none';
+            grid.style.display = 'grid';
+            
+            data.forEach(file => {
+                const item = document.createElement('div');
+                item.className = 'bucket-item';
+                
+                const isImage = file.filetype && file.filetype.startsWith('image/');
+                const isVideo = file.filetype && file.filetype.startsWith('video/');
+                
+                let previewHTML = '';
+                if (isImage) {
+                    previewHTML = `<img src="${file.file_url}" alt="${file.title}">`;
+                } else if (isVideo) {
+                    previewHTML = `<video src="${file.file_url}"></video>`;
+                } else {
+                    const icon = getFileIcon(file.filetype || '');
+                    previewHTML = `<i class="file-icon ${icon}"></i>`;
+                }
+                
+                const fileSize = formatFileSize(file.filesize);
+                const uploadDate = new Date(file.uploaded_at).toLocaleDateString('ar-EG');
+                
+                item.innerHTML = `
+                    <div class="bucket-preview">
+                        ${previewHTML}
+                    </div>
+                    <div class="bucket-info">
+                        <div class="bucket-title">${file.title}</div>
+                        <div class="bucket-filename">${file.filename}</div>
+                        <div class="bucket-meta">
+                            <span>${fileSize}</span>
+                            <span>${uploadDate}</span>
+                        </div>
+                        <div class="bucket-actions">
+                            <button class="bucket-action-btn view-btn" onclick='viewFile(${JSON.stringify(file)})'>
+                                <i class="fa-solid fa-eye"></i> عرض
+                            </button>
+                            <button class="bucket-action-btn edit-btn" onclick='editFile("${file.storage_path}", "${file.title}")'>
+                                <i class="fa-solid fa-edit"></i> تعديل
+                            </button>
+                            <button class="bucket-action-btn delete-btn" onclick='deleteFile("${file.storage_path}", "${file.title}")'>
+                                <i class="fa-solid fa-trash"></i> حذف
+                            </button>
+                        </div>
+                    </div>
+                `;
+                
+                grid.appendChild(item);
+            });
+        } catch (err) {
+            console.error('Render error:', err);
+            alert("حدث خطأ في عرض الملفات");
+        }
+    }
+
+    function getFileIcon(filetype) {
+        if (filetype.includes('pdf')) return 'fa-solid fa-file-pdf';
+        if (filetype.includes('word') || filetype.includes('document')) return 'fa-solid fa-file-word';
+        if (filetype.includes('sheet') || filetype.includes('excel')) return 'fa-solid fa-file-excel';
+        if (filetype.includes('text')) return 'fa-solid fa-file-alt';
+        if (filetype.includes('zip') || filetype.includes('rar')) return 'fa-solid fa-file-archive';
+        return 'fa-solid fa-file';
+    }
+
+    function formatFileSize(bytes) {
+        if (!bytes) return '0 B';
+        if (bytes < 1024) return bytes + ' B';
+        if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB';
+        if (bytes < 1024 * 1024 * 1024) return (bytes / (1024 * 1024)).toFixed(1) + ' MB';
+        return (bytes / (1024 * 1024 * 1024)).toFixed(1) + ' GB';
+    }
+
+    window.viewFile = function(file) {
+        const modal = document.getElementById('view-modal');
+        const content = document.getElementById('view-content');
+        
+        const isImage = file.filetype && file.filetype.startsWith('image/');
+        const isVideo = file.filetype && file.filetype.startsWith('video/');
+        
+        if (isImage) {
+            content.innerHTML = `<img src="${file.file_url}" alt="${file.title}" style="max-width: 100%; max-height: 90vh; border-radius: 10px;">`;
+        } else if (isVideo) {
+            content.innerHTML = `<video src="${file.file_url}" controls style="max-width: 100%; max-height: 90vh; border-radius: 10px;"></video>`;
+        } else {
+            content.innerHTML = `
+                <div style="padding: 40px; text-align: center; background: var(--card-bg); border-radius: 10px;">
+                    <i class="${getFileIcon(file.filetype)}" style="font-size: 5rem; color: var(--primary-teal); margin-bottom: 20px;"></i>
+                    <h3 style="color: var(--text-color); margin-bottom: 10px;">${file.title}</h3>
+                    <p style="color: var(--tab-text); margin-bottom: 20px;">${file.filename}</p>
+                    <a href="${file.file_url}" download="${file.filename}" target="_blank" style="background: var(--primary-teal); color: var(--bg-dark); padding: 12px 30px; border-radius: 8px; text-decoration: none; font-weight: bold; display: inline-block;">
+                        <i class="fa-solid fa-download"></i> تحميل الملف
+                    </a>
+                </div>
+            `;
+        }
+        
+        modal.classList.add('active');
+    };
+
+    window.closeViewModal = function() {
+        document.getElementById('view-modal').classList.remove('active');
+    };
+
+    window.editFile = function(storagePath, currentTitle) {
+        document.getElementById('edit-file-id').value = storagePath;
+        document.getElementById('edit-file-title').value = currentTitle;
+        document.getElementById('edit-file-modal').style.display = 'flex';
+    };
+
+    window.closeEditFileModal = function() {
+        document.getElementById('edit-file-modal').style.display = 'none';
+    };
+
+    window.saveFileEdit = async function() {
+        const storagePath = document.getElementById('edit-file-id').value;
+        const newTitle = document.getElementById('edit-file-title').value.trim();
+        
+        if (!newTitle) {
+            alert("يرجى إدخال اسم للملف");
+            return;
+        }
+        
+        const user = JSON.parse(localStorage.getItem('currentUser'));
+        
+        try {
+            const { error } = await window.supabase
+                .from('bucket_files')
+                .update({ title: newTitle })
+                .eq('storage_path', storagePath)
+                .eq('user_email', user.email);
+            
+            if (error) throw error;
+            
+            closeEditFileModal();
+            renderBucketFiles();
+        } catch (err) {
+            console.error(err);
+            alert("حدث خطأ أثناء تعديل الملف");
+        }
+    };
+
+    window.deleteFile = async function(storagePath, title) {
+        if (!confirm(`هل تريد حذف الملف "${title}"؟`)) return;
+        
+        const user = JSON.parse(localStorage.getItem('currentUser'));
+        
+        try {
+            // حذف من قاعدة البيانات
+            const { error: dbError } = await window.supabase
+                .from('bucket_files')
+                .delete()
+                .eq('storage_path', storagePath)
+                .eq('user_email', user.email);
+            
+            if (dbError) throw dbError;
+            
+            // حذف من Storage
+            const { error: storageError } = await window.supabase.storage
+                .from(BUCKET_NAME)
+                .remove([storagePath]);
+            
+            if (storageError) {
+                console.warn('Storage deletion warning:', storageError);
+            }
+            
+            renderBucketFiles();
+        } catch (err) {
+            console.error(err);
+            alert("حدث خطأ أثناء حذف الملف");
+        }
+    };
+
+    window.filterBucketFiles = function() {
+        const searchValue = document.getElementById('bucket-search').value;
+        renderBucketFiles(searchValue);
+    };
+
+    // === Timer ===
     let timerInterval;
     let isRunning = false;
     let timeLeft = 25 * 60;
@@ -1547,4 +2222,3 @@ input:focus, select:focus, textarea:focus {
 </script>
 </body>
 </html>
-
