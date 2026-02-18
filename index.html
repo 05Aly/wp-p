@@ -3872,12 +3872,20 @@
             let ramadanTaraweeh = {}; // { day1: true, ... }
 
             // ── localStorage helpers ──────────────────────────────────────
+            function getLocalTodayDate() {
+                const d = new Date();
+                const year = d.getFullYear();
+                const month = String(d.getMonth() + 1).padStart(2, '0');
+                const day = String(d.getDate()).padStart(2, '0');
+                return `${year}-${month}-${day}`;
+            }
+
             function getRamadanKey(type) {
                 const user = JSON.parse(localStorage.getItem('currentUser'));
                 if (!user) return null;
                 if (type === 'prayers') {
-                    const today = new Date().toISOString().split('T')[0];
-                    return `ramadan_prayers_${user.email}_${today}`;
+                    // Use local date for prayers to ensure daily reset
+                    return `ramadan_prayers_${user.email}_${getLocalTodayDate()}`;
                 }
                 return `ramadan_${type}_${user.email}`;
             }
@@ -3921,11 +3929,15 @@
             // ── Master load function ──────────────────────────────────────
             async function loadAllRamadanData() {
                 // Step 1: Load instantly from localStorage
+                // Reset prayers to default if new day (i.e., local storage is empty for today's key)
+                ramadanPrayers = { fajr: false, dhuhr: false, asr: false, maghrib: false, isha: false };
+
                 const localPrayers = loadFromLocal('prayers');
                 if (localPrayers) {
                     ramadanPrayers = localPrayers;
-                    ['fajr', 'dhuhr', 'asr', 'maghrib', 'isha'].forEach(p => updatePrayerUI(p));
                 }
+                // ALWAYS update UI to match current state (either loaded or reset)
+                ['fajr', 'dhuhr', 'asr', 'maghrib', 'isha'].forEach(p => updatePrayerUI(p));
 
                 const localKhatma = loadFromLocal('khatma');
                 if (localKhatma) {
@@ -3945,7 +3957,7 @@
 
                 try {
                     // Prayers
-                    const today = new Date().toISOString().split('T')[0];
+                    const today = getLocalTodayDate();
                     const { data: pData, error: pErr } = await window.supabase
                         .from('ramadan_prayers').select('*')
                         .eq('user_email', user.email).eq('prayer_date', today);
@@ -3990,7 +4002,7 @@
                 updatePrayerUI(prayer);
                 saveToLocal('prayers', ramadanPrayers); // Save instantly to localStorage
 
-                const today = new Date().toISOString().split('T')[0];
+                const today = getLocalTodayDate();
                 const { error } = await window.supabase
                     .from('ramadan_prayers')
                     .upsert({
