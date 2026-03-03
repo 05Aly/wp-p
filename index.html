@@ -584,30 +584,64 @@
 
         .note-card {
             background: var(--input-bg);
-            padding: 12px 15px;
-            border-radius: 10px;
+            padding: 13px 15px;
+            border-radius: 12px;
             margin-top: 10px;
             border-right: 4px solid var(--primary-teal);
             cursor: pointer;
-            transition: 0.3s;
+            transition: all 0.25s ease;
             display: flex;
             justify-content: space-between;
             align-items: center;
+            position: relative;
+            gap: 10px;
         }
 
         .note-card:hover {
             background: var(--tab-inactive);
-            transform: translateX(-5px);
+            transform: translateX(-4px);
+            box-shadow: 0 4px 14px rgba(45, 212, 191, 0.12);
+            border-right-color: var(--primary-teal);
         }
 
         .note-card h4 {
             margin: 0;
             color: var(--text-color);
-            font-size: 0.95rem;
+            font-size: 0.92rem;
+            font-weight: 600;
             white-space: nowrap;
             overflow: hidden;
             text-overflow: ellipsis;
-            max-width: 80%;
+            flex: 1;
+            min-width: 0;
+        }
+
+        .note-delete-btn {
+            flex-shrink: 0;
+            background: transparent;
+            border: 1px solid rgba(239, 68, 68, 0.35);
+            color: #ef4444;
+            width: 30px;
+            height: 30px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 0.8rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s ease;
+            opacity: 0.5;
+        }
+
+        .note-card:hover .note-delete-btn {
+            opacity: 1;
+        }
+
+        .note-delete-btn:hover {
+            background: #ef4444;
+            border-color: #ef4444;
+            color: white;
+            transform: scale(1.1);
         }
 
         .modal-overlay {
@@ -3227,6 +3261,195 @@
             background: rgba(45, 212, 191, 0.05);
         }
 
+        /* ── Drag & Drop ─── */
+        .team-task-card[draggable="true"] {
+            cursor: grab;
+        }
+
+        .team-task-card[draggable="true"]:active {
+            cursor: grabbing;
+        }
+
+        .team-task-card.dragging {
+            opacity: 0.45;
+            transform: scale(0.97);
+        }
+
+        .team-task-list.drag-over {
+            background: rgba(45, 212, 191, 0.07);
+            border-radius: 10px;
+            outline: 2px dashed var(--primary-teal);
+            outline-offset: 4px;
+        }
+
+        /* ── Team Task Detail Side Panel ─── */
+        #team-task-panel-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.45);
+            z-index: 3100;
+            display: none;
+            backdrop-filter: blur(3px);
+        }
+
+        #team-task-panel-overlay.open {
+            display: block;
+        }
+
+        #team-task-panel {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 380px;
+            max-width: 95vw;
+            height: 100vh;
+            background: var(--card-bg);
+            border-right: 1px solid var(--border-color);
+            z-index: 3200;
+            display: flex;
+            flex-direction: column;
+            transform: translateX(-100%);
+            transition: transform 0.32s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: 6px 0 30px rgba(0, 0, 0, 0.35);
+        }
+
+        #team-task-panel.open {
+            transform: translateX(0);
+        }
+
+        #team-task-panel .panel-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 18px 20px;
+            border-bottom: 1px solid var(--border-color);
+            background: linear-gradient(135deg, rgba(45, 212, 191, 0.08), transparent);
+            gap: 12px;
+        }
+
+        #team-task-panel .panel-header h3 {
+            margin: 0;
+            flex: 1;
+            font-size: 1rem;
+            color: var(--text-color);
+            outline: none;
+            border-bottom: 1px dashed var(--tab-text);
+            padding-bottom: 2px;
+            min-height: 24px;
+        }
+
+        #team-task-panel .panel-close-btn {
+            background: none;
+            border: none;
+            color: var(--tab-text);
+            font-size: 1.5rem;
+            cursor: pointer;
+            width: 32px;
+            height: 32px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 8px;
+            transition: 0.2s;
+            flex-shrink: 0;
+        }
+
+        #team-task-panel .panel-close-btn:hover {
+            background: var(--tab-inactive);
+            color: var(--text-color);
+        }
+
+        #team-task-panel .panel-body {
+            flex: 1;
+            overflow-y: auto;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        #team-task-panel .panel-section h4 {
+            margin: 0 0 10px 0;
+            font-size: 0.88rem;
+            color: var(--primary-teal);
+            display: flex;
+            align-items: center;
+            gap: 7px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        #team-task-notes {
+            width: 100%;
+            min-height: 160px;
+            padding: 12px;
+            background: var(--input-bg);
+            color: var(--text-color);
+            border: 1px solid var(--border-color);
+            border-radius: 10px;
+            resize: vertical;
+            font-family: inherit;
+            font-size: 0.92rem;
+            line-height: 1.6;
+            transition: border-color 0.2s;
+        }
+
+        #team-task-notes:focus {
+            outline: none;
+            border-color: var(--primary-teal);
+            box-shadow: 0 0 0 3px rgba(45, 212, 191, 0.1);
+        }
+
+        #team-task-panel .panel-footer {
+            padding: 16px 20px;
+            border-top: 1px solid var(--border-color);
+            display: flex;
+            gap: 10px;
+        }
+
+        .team-panel-save-btn {
+            flex: 1;
+            padding: 11px;
+            background: var(--primary-teal);
+            color: var(--bg-dark);
+            border: none;
+            border-radius: 10px;
+            font-weight: bold;
+            font-size: 0.95rem;
+            cursor: pointer;
+            transition: 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .team-panel-save-btn:hover {
+            background: #0d9488;
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(45, 212, 191, 0.3);
+        }
+
+        /* meta info row in panel */
+        .team-panel-meta-row {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            font-size: 0.85rem;
+            color: var(--tab-text);
+        }
+
+        .team-panel-meta-row span {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .team-panel-meta-row i {
+            color: var(--primary-teal);
+            width: 16px;
+        }
+
         /* لوحة سجل النشاط */
         .team-activity-panel {
             background: var(--card-bg);
@@ -4739,7 +4962,7 @@
                             <h3>📋 للقيام</h3>
                             <span class="team-col-count" id="team-count-todo">0</span>
                         </div>
-                        <ul class="team-task-list" id="team-list-todo"></ul>
+                        <ul class="team-task-list" id="team-list-todo" data-status="todo"></ul>
                         <button class="add-team-task-btn" onclick="openAddTeamTaskModal('todo')">
                             <i class="fa-solid fa-plus"></i> إضافة مهمة
                         </button>
@@ -4750,7 +4973,7 @@
                             <h3>🚧 جاري العمل</h3>
                             <span class="team-col-count" id="team-count-doing">0</span>
                         </div>
-                        <ul class="team-task-list" id="team-list-doing"></ul>
+                        <ul class="team-task-list" id="team-list-doing" data-status="doing"></ul>
                         <button class="add-team-task-btn" onclick="openAddTeamTaskModal('doing')">
                             <i class="fa-solid fa-plus"></i> إضافة مهمة
                         </button>
@@ -4761,7 +4984,7 @@
                             <h3>✅ منجز</h3>
                             <span class="team-col-count" id="team-count-done">0</span>
                         </div>
-                        <ul class="team-task-list" id="team-list-done"></ul>
+                        <ul class="team-task-list" id="team-list-done" data-status="done"></ul>
                         <button class="add-team-task-btn" onclick="openAddTeamTaskModal('done')">
                             <i class="fa-solid fa-plus"></i> إضافة مهمة
                         </button>
@@ -4871,6 +5094,45 @@
                 </div>
 
             </div>
+        </div>
+    </div>
+
+    <!-- ─── Team Task Detail Side Panel ──────────────────── -->
+    <div id="team-task-panel-overlay" onclick="closeTeamTaskPanel()"></div>
+    <div id="team-task-panel">
+        <div class="panel-header">
+            <h3 id="team-panel-task-title" contenteditable="true">عنوان المهمة</h3>
+            <button class="panel-close-btn" onclick="closeTeamTaskPanel()" title="إغلاق">&times;</button>
+        </div>
+        <div class="panel-body">
+
+            <!-- معلومات المهمة -->
+            <div class="panel-section">
+                <h4><i class="fa-solid fa-circle-info"></i> معلومات</h4>
+                <div class="team-panel-meta-row" id="team-panel-meta">
+                    <span><i class="fa-solid fa-user"></i> <span id="team-panel-assignee">—</span></span>
+                    <span><i class="fa-regular fa-calendar"></i> <span id="team-panel-due">—</span></span>
+                </div>
+            </div>
+
+            <!-- الوصف -->
+            <div class="panel-section">
+                <h4><i class="fa-regular fa-file-lines"></i> الوصف</h4>
+                <textarea id="team-task-description" placeholder="وصف المهمة..."
+                    style="width:100%;min-height:80px;padding:10px;background:var(--input-bg);color:var(--text-color);border:1px solid var(--border-color);border-radius:10px;resize:vertical;font-family:inherit;font-size:0.9rem;"></textarea>
+            </div>
+
+            <!-- ملاحظات تفصيلية -->
+            <div class="panel-section">
+                <h4><i class="fa-regular fa-note-sticky"></i> ملاحظات</h4>
+                <textarea id="team-task-notes" placeholder="اكتب ملاحظاتك هنا..."></textarea>
+            </div>
+
+        </div>
+        <div class="panel-footer">
+            <button class="team-panel-save-btn" onclick="saveTeamTaskDetails()">
+                <i class="fa-solid fa-floppy-disk"></i> حفظ التغييرات
+            </button>
         </div>
     </div>
 
@@ -6138,14 +6400,15 @@
 
                         // زر حذف الملاحظة
                         const deleteBtn = document.createElement('button');
-                        deleteBtn.innerHTML = '&times;';
+                        deleteBtn.innerHTML = '<i class="fa-solid fa-trash"></i>';
                         deleteBtn.className = 'note-delete-btn';
+                        deleteBtn.title = 'حذف الملاحظة';
                         deleteBtn.onclick = (e) => {
                             e.stopPropagation();
-                            deleteNote(note.id);
+                            deleteNoteFromDB(note.id);
                         };
 
-                        noteCard.innerHTML = `<h4>${escapeHtml(decryptedTitle)}</h4><div class="note-preview">${escapeHtml(decryptedBody)}</div>`;
+                        noteCard.innerHTML = `<h4>${escapeHtml(decryptedTitle)}</h4>`;
                         noteCard.appendChild(deleteBtn);
                         area.appendChild(noteCard);
                         displayedCount++;
@@ -8008,6 +8271,32 @@
                     const counts = { todo: 0, doing: 0, done: 0 };
                     Object.values(lists).forEach(l => l.innerHTML = '');
 
+                    // إضافة D&D events على الأعمدة مرة واحدة فقط
+                    Object.values(lists).forEach(ul => {
+                        if (!ul.dataset.dndInit) {
+                            ul.dataset.dndInit = "true";
+                            ul.addEventListener('dragover', (e) => {
+                                e.preventDefault();
+                                e.dataTransfer.dropEffect = 'move';
+                                ul.classList.add('drag-over');
+                            });
+                            ul.addEventListener('dragleave', (e) => {
+                                if (!ul.contains(e.relatedTarget)) {
+                                    ul.classList.remove('drag-over');
+                                }
+                            });
+                            ul.addEventListener('drop', async (e) => {
+                                e.preventDefault();
+                                ul.classList.remove('drag-over');
+                                const taskId = e.dataTransfer.getData('text/plain');
+                                const newStatus = ul.dataset.status;
+                                if (taskId && newStatus) {
+                                    await teamChangeStatus(Number(taskId), newStatus);
+                                }
+                            });
+                        }
+                    });
+
                     (tasks || []).forEach(task => {
                         const card = buildTaskCard(task);
                         if (lists[task.status]) {
@@ -8069,16 +8358,28 @@
                     ${dueHtml}
                 </div>
                 <div class="team-task-actions">
-                    <button class="task-action-btn" onclick="teamChangeStatus(${task.id},'${sm.next}')">
+                    <button class="task-action-btn" onclick="teamChangeStatus(${task.id},'${sm.next}'); event.stopPropagation();">
                         <i class="fa-solid ${sm.icon}"></i> ${sm.label}
                     </button>
-                    <button class="task-action-btn" onclick="openAssignTaskModal(${task.id})">
+                    <button class="task-action-btn" onclick="openTeamTaskPanel(${task.id}); event.stopPropagation();">
+                        <i class="fa-regular fa-note-sticky"></i> تفاصيل
+                    </button>
+                    <button class="task-action-btn" onclick="openAssignTaskModal(${task.id}); event.stopPropagation();">
                         <i class="fa-solid fa-user-pen"></i> تعيين
                     </button>
-                    <button class="task-action-btn del-btn" onclick="teamDeleteTask(${task.id})">
+                    <button class="task-action-btn del-btn" onclick="teamDeleteTask(${task.id}); event.stopPropagation();">
                         <i class="fa-solid fa-trash"></i>
                     </button>
                 </div>`;
+                card.setAttribute('draggable', 'true');
+                card.addEventListener('dragstart', (e) => {
+                    e.dataTransfer.setData('text/plain', task.id);
+                    e.dataTransfer.effectAllowed = 'move';
+                    setTimeout(() => card.classList.add('dragging'), 0);
+                });
+                card.addEventListener('dragend', () => {
+                    card.classList.remove('dragging');
+                });
                 return card;
             }
 
@@ -8129,6 +8430,84 @@
 
                 await logActivity(`حذف مهمة "${task ? task.title : ''}"`);
                 await renderTeamTasks();
+            };
+
+            // ─── Team Task Detail Panel ───────────────────────────────────
+            let currentTeamTaskId = null;
+
+            window.openTeamTaskPanel = async function (taskId) {
+                currentTeamTaskId = taskId;
+
+                try {
+                    const { data: task, error } = await window.supabase
+                        .from('team_tasks')
+                        .select('*')
+                        .eq('id', taskId)
+                        .single();
+
+                    if (error || !task) throw error;
+
+                    // تعبئة العنوان
+                    document.getElementById('team-panel-task-title').innerText = task.title || '';
+
+                    // تعبئة المعلومات
+                    document.getElementById('team-panel-assignee').textContent =
+                        task.assigned_name || 'غير معيّن';
+                    document.getElementById('team-panel-due').textContent =
+                        task.due_date || 'بدون موعد';
+
+                    // تعبئة الوصف
+                    document.getElementById('team-task-description').value = task.description || '';
+
+                    // تعبئة الملاحظات
+                    document.getElementById('team-task-notes').value = task.notes || '';
+
+                    // إظهار الـ panel
+                    document.getElementById('team-task-panel-overlay').classList.add('open');
+                    document.getElementById('team-task-panel').classList.add('open');
+
+                } catch (err) {
+                    console.error('openTeamTaskPanel error:', err);
+                    alert('فشل تحميل تفاصيل المهمة');
+                }
+            };
+
+            window.closeTeamTaskPanel = function () {
+                document.getElementById('team-task-panel-overlay').classList.remove('open');
+                document.getElementById('team-task-panel').classList.remove('open');
+                currentTeamTaskId = null;
+            };
+
+            window.saveTeamTaskDetails = async function () {
+                if (!currentTeamTaskId) return;
+
+                const title = document.getElementById('team-panel-task-title').innerText.trim();
+                const description = document.getElementById('team-task-description').value.trim();
+                const notes = document.getElementById('team-task-notes').value.trim();
+
+                if (!title) { alert('لا يمكن ترك العنوان فارغاً'); return; }
+
+                const btn = document.querySelector('.team-panel-save-btn');
+                if (btn) { btn.disabled = true; btn.textContent = 'جاري الحفظ...'; }
+
+                try {
+                    const { error } = await window.supabase
+                        .from('team_tasks')
+                        .update({ title, description, notes })
+                        .eq('id', currentTeamTaskId);
+
+                    if (error) throw error;
+
+                    await logActivity(`عدّل تفاصيل مهمة "${title}"`);
+                    await renderTeamTasks();
+                    closeTeamTaskPanel();
+
+                } catch (err) {
+                    console.error('saveTeamTaskDetails error:', err);
+                    alert('فشل حفظ التفاصيل: ' + (err.message || err));
+                } finally {
+                    if (btn) { btn.disabled = false; btn.innerHTML = '<i class="fa-solid fa-floppy-disk"></i> حفظ التغييرات'; }
+                }
             };
 
             // ─── سجل النشاط ──────────────────────────────────────────────
